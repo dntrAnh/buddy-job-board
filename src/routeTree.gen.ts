@@ -14,6 +14,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedBoardRouteImport } from './routes/_authenticated/board'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedGroupsGroupIdRouteImport } from './routes/_authenticated/groups.$groupId'
 import { Route as ApiPublicHooksJobDigestRouteImport } from './routes/api/public/hooks/job-digest'
 import { Route as ApiPublicHooksWeeklyReminderRouteImport } from './routes/api/public/hooks/weekly-reminder'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -44,6 +46,17 @@ const AuthenticatedResumeRoute = AuthenticatedResumeRouteImport.update({
   path: '/resume',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGroupsGroupIdRoute =
+  AuthenticatedGroupsGroupIdRouteImport.update({
+    id: '/groups/$groupId',
+    path: '/groups/$groupId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicHooksJobDigestRoute = ApiPublicHooksJobDigestRouteImport.update({
   id: '/api/public/hooks/job-digest',
   path: '/api/public/hooks/job-digest',
@@ -77,6 +90,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/board': typeof AuthenticatedBoardRoute
   '/resume': typeof AuthenticatedResumeRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -88,6 +103,8 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/board': typeof AuthenticatedBoardRoute
   '/resume': typeof AuthenticatedResumeRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -101,6 +118,8 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/board': typeof AuthenticatedBoardRoute
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -114,6 +133,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/board'
     | '/resume'
+    | '/settings'
+    | '/groups/$groupId'
     | '/api/public/hooks/job-digest'
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
@@ -125,6 +146,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/board'
     | '/resume'
+    | '/settings'
+    | '/groups/$groupId'
     | '/api/public/hooks/job-digest'
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
@@ -137,6 +160,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/board'
     | '/_authenticated/resume'
+    | '/_authenticated/settings'
+    | '/_authenticated/groups/$groupId'
     | '/api/public/hooks/job-digest'
     | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
@@ -192,6 +217,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedResumeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/groups/$groupId': {
+      id: '/_authenticated/groups/$groupId'
+      path: '/groups/$groupId'
+      fullPath: '/groups/$groupId'
+      preLoaderRoute: typeof AuthenticatedGroupsGroupIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/hooks/job-digest': {
       id: '/api/public/hooks/job-digest'
       path: '/api/public/hooks/job-digest'
@@ -233,11 +272,15 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBoardRoute: typeof AuthenticatedBoardRoute
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedGroupsGroupIdRoute: typeof AuthenticatedGroupsGroupIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBoardRoute: AuthenticatedBoardRoute,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedGroupsGroupIdRoute: AuthenticatedGroupsGroupIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
