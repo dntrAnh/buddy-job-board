@@ -5,4 +5,4 @@
 - [x] Post job, group board (who applied), my board (to apply / applied / skip)
 - [x] ATS scoring + re-grade + suggestions
 - [x] Reminder mode control in corner
-- [ ] Emails (invites, new job, friend-applied, easy digest) — blocked: needs sender domain
+- [x] Emails (invites, new job, friend-applied, easy digest 3x/day)
