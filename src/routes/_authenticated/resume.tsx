@@ -53,7 +53,7 @@ function ResumePage() {
     const list = jobs ?? [];
     setProgress({ done: 0, total: list.length });
     for (let i = 0; i < list.length; i++) {
-      const r = await score({ data: { jobId: list[i].id } });
+      const r = await score({ data: { jobId: list[i]!.id } });
       if ("error" in r && r.error) { toast.error(r.error); break; }
       setProgress({ done: i + 1, total: list.length });
     }
