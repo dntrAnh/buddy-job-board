@@ -30,11 +30,13 @@ A small invite-only job board: anyone in a group pastes a job, everyone else get
 - The full job list with, per job, avatars/names of who applied.
 - Sorted to surface jobs where friends have applied but you haven't.
 
-**Emails**
-- New job posted → to all other members.
-- A groupmate applied to a job you haven't → nudge email.
-- Weekly reminder of jobs you still haven't applied to.
-- Each person can turn off any of these three in settings.
+**Emails — reminder modes**
+Each person picks how much they want to be nudged:
+- Easy: a digest of new job posts, 2–3 times a day.
+- Medium: one email for every new job posted.
+- Hard: everything in Medium, plus an email each time a groupmate applies to a job you haven't applied to yet.
+
+Mode is chosen during profile setup and can be changed anytime from a small control in the corner of the page.
 
 ## Look and feel
 
