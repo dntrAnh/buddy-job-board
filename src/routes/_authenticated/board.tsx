@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, fetchGroupData, fetchGroups, fetchPendingInvites, type Job, type Profile, type Score } from "@/lib/data";
 import { scoreJob } from "@/lib/scoring.functions";
+import { notifyApplied, notifyInvite, notifyNewJob } from "@/lib/notify.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,6 +110,7 @@ function Board() {
 
 function GroupView({ groupId, profile, userId }: { groupId: string; profile: Profile; userId: string }) {
   const qc = useQueryClient();
+  const notifyApp = useServerFn(notifyApplied);
   const q = useQuery({ queryKey: ["group", groupId], queryFn: () => fetchGroupData(groupId, userId) });
   const [posting, setPosting] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -144,7 +146,10 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
 
   async function setStatus(jobId: string, status: "applied" | "skipped" | null) {
     if (status === null) await supabase.from("applications").delete().eq("job_id", jobId).eq("user_id", userId);
-    else await supabase.from("applications").upsert({ job_id: jobId, user_id: userId, status, updated_at: new Date().toISOString() });
+    else {
+      await supabase.from("applications").upsert({ job_id: jobId, user_id: userId, status, updated_at: new Date().toISOString() });
+      if (status === "applied") notifyApp({ data: { id: jobId } }).catch(() => {});
+    }
     qc.invalidateQueries({ queryKey: ["group", groupId] });
   }
 
@@ -347,17 +352,19 @@ function KeywordRow({ label, items, cls }: { label: string; items: string[]; cls
 
 function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean; onOpenChange: (o: boolean) => void; groupId: string; userId: string }) {
   const qc = useQueryClient();
+  const notifyJob = useServerFn(notifyNewJob);
   const [f, setF] = useState({ company: "", role: "", description: "", link: "", notes: "" });
   const [busy, setBusy] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.from("jobs").insert({
+    const { data: created, error } = await supabase.from("jobs").insert({
       group_id: groupId, posted_by: userId, company: f.company.trim(), role: f.role.trim(),
       description: f.description.trim(), link: f.link.trim() || null, notes: f.notes.trim() || null,
-    });
+    }).select("id").single();
     setBusy(false);
     if (error) { toast.error(error.message); return; }
+    notifyJob({ data: { id: created.id } }).catch(() => {});
     toast.success("Job posted to the group!");
     setF({ company: "", role: "", description: "", link: "", notes: "" });
     onOpenChange(false);
@@ -385,10 +392,12 @@ function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean;
 
 function InviteDialog({ open, onOpenChange, groupId, userId, pending }: { open: boolean; onOpenChange: (o: boolean) => void; groupId: string; userId: string; pending: { id: string; email: string }[] }) {
   const qc = useQueryClient();
+  const sendInvite = useServerFn(notifyInvite);
   const [email, setEmail] = useState("");
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await supabase.from("invites").insert({ group_id: groupId, email: email.trim().toLowerCase(), invited_by: userId });
+    const { data: inv, error } = await supabase.from("invites").insert({ group_id: groupId, email: email.trim().toLowerCase(), invited_by: userId }).select("id").single();
+    if (inv) sendInvite({ data: { id: inv.id } }).catch(() => {});
     if (error) { toast.error(error.message.includes("duplicate") ? "Already invited." : error.message); return; }
     toast.success("Invite added — they'll see it when they sign in with that email.");
     setEmail("");
