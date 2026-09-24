@@ -1,8 +1,8 @@
 # Roadmap
-- [ ] Enable Cloud, schema (groups max 15, invites, jobs, applications, profiles w/ reminder mode, match scores)
-- [ ] Auth + onboarding (resume, reminder mode)
-- [ ] Groups, invites, switcher
-- [ ] Post job, group board (who applied), my board (to apply / applied / skip)
-- [ ] ATS scoring + re-grade + suggestions
-- [ ] Reminder mode control in corner
-- [ ] Emails (needs sender domain)
+- [x] Enable Cloud, schema (groups max 15, invites, jobs, applications, profiles w/ reminder mode, match scores)
+- [x] Auth + onboarding (resume, reminder mode)
+- [x] Groups, invites, switcher
+- [x] Post job, group board (who applied), my board (to apply / applied / skip)
+- [x] ATS scoring + re-grade + suggestions
+- [x] Reminder mode control in corner
+- [ ] Emails (invites, new job, friend-applied, easy digest) — blocked: needs sender domain
