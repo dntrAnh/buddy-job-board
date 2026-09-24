@@ -14,8 +14,52 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ExternalLink, RefreshCw, Plus, UserPlus, Check, SkipForward, Undo2, Bell } from "lucide-react";
+import { ExternalLink, RefreshCw, Plus, UserPlus, Check, SkipForward, Undo2, Bell, Users, Mail, Sparkles, Copy } from "lucide-react";
 import { ReminderModePicker } from "@/components/ReminderModePicker";
+import { improveBullets, type BulletTip } from "@/lib/bullets.functions";
+
+type Filters = { q: string; status: "all" | "todo" | "applied" | "skipped"; minMatch: number; sort: "newest" | "oldest" | "match" | "company" | "role" | "friends" };
+const DEFAULT_FILTERS: Filters = { q: "", status: "all", minMatch: 0, sort: "newest" };
+
+function FilterBar({ f, setF }: { f: Filters; setF: (f: Filters) => void }) {
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border-2 border-foreground bg-card p-3">
+      <Input className="w-56" placeholder="Search company or role…" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} />
+      <Select value={f.status} onValueChange={(v) => setF({ ...f, status: v as Filters["status"] })}>
+        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Any status</SelectItem>
+          <SelectItem value="todo">To apply</SelectItem>
+          <SelectItem value="applied">Applied</SelectItem>
+          <SelectItem value="skipped">Skipped</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={String(f.minMatch)} onValueChange={(v) => setF({ ...f, minMatch: Number(v) })}>
+        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="0">Any match</SelectItem>
+          <SelectItem value="50">50%+ match</SelectItem>
+          <SelectItem value="75">75%+ match</SelectItem>
+          <SelectItem value="90">90%+ match</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={f.sort} onValueChange={(v) => setF({ ...f, sort: v as Filters["sort"] })}>
+        <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="newest">Newest posted</SelectItem>
+          <SelectItem value="oldest">Oldest posted</SelectItem>
+          <SelectItem value="match">Best match</SelectItem>
+          <SelectItem value="friends">Most friends applied</SelectItem>
+          <SelectItem value="company">Company A–Z</SelectItem>
+          <SelectItem value="role">Role A–Z</SelectItem>
+        </SelectContent>
+      </Select>
+      {JSON.stringify(f) !== JSON.stringify(DEFAULT_FILTERS) && (
+        <Button size="sm" variant="ghost" onClick={() => setF(DEFAULT_FILTERS)}>Reset</Button>
+      )}
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/board")({
   head: () => ({
@@ -82,6 +126,8 @@ function Board() {
           <Button variant="ghost" size="sm" onClick={newGroup}><Plus className="size-4" /> New group</Button>
           <div className="ml-auto flex items-center gap-2">
             {profile && <ReminderModePicker profile={profile} />}
+            {groupId && <Link to="/groups/$groupId" params={{ groupId }}><Button variant="ghost" size="sm"><Users className="size-4" /> Manage group</Button></Link>}
+            <Link to="/settings"><Button variant="ghost" size="sm"><Mail className="size-4" /> Emails</Button></Link>
             <Link to="/resume"><Button variant="outline" size="sm">My resume</Button></Link>
             <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>Sign out</Button>
           </div>
@@ -117,6 +163,7 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
   const [openJob, setOpenJob] = useState<Job | null>(null);
   const score = useServerFn(scoreJob);
   const [scoring, setScoring] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const attempted = useRef<Set<string>>(new Set());
 
   const d = q.data;
@@ -153,13 +200,29 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
     qc.invalidateQueries({ queryKey: ["group", groupId] });
   }
 
-  const toApply = d.jobs.filter((j) => !myStatus(j.id));
-  const applied = d.jobs.filter((j) => myStatus(j.id) === "applied");
-  const groupSorted = [...d.jobs].sort((a, b) => {
-    const pa = !myStatus(a.id) ? appliedBy(a.id).length : -1;
-    const pb = !myStatus(b.id) ? appliedBy(b.id).length : -1;
-    return pb - pa;
+  const needle = filters.q.trim().toLowerCase();
+  const filtered = d.jobs.filter((j) => {
+    if (needle && !`${j.company} ${j.role}`.toLowerCase().includes(needle)) return false;
+    const s = myStatus(j.id);
+    if (filters.status === "todo" && s) return false;
+    if (filters.status === "applied" && s !== "applied") return false;
+    if (filters.status === "skipped" && s !== "skipped") return false;
+    if (filters.minMatch > 0 && (scoreMap.get(j.id)?.score ?? -1) < filters.minMatch) return false;
+    return true;
+  }).sort((a, b) => {
+    switch (filters.sort) {
+      case "oldest": return a.created_at.localeCompare(b.created_at);
+      case "match": return (scoreMap.get(b.id)?.score ?? -1) - (scoreMap.get(a.id)?.score ?? -1);
+      case "friends": return appliedBy(b.id).length - appliedBy(a.id).length;
+      case "company": return a.company.localeCompare(b.company);
+      case "role": return a.role.localeCompare(b.role);
+      default: return b.created_at.localeCompare(a.created_at);
+    }
   });
+  const toApply = filtered.filter((j) => !myStatus(j.id));
+  const applied = filtered.filter((j) => myStatus(j.id) === "applied");
+  const skipped = filtered.filter((j) => myStatus(j.id) === "skipped");
+  const groupSorted = filtered;
   const seats = d.memberIds.length + d.pendingInvites.length;
 
   const card = (j: Job) => (
@@ -189,6 +252,7 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
         )}
       </div>
 
+      <FilterBar f={filters} setF={setFilters} />
       <Tabs defaultValue="mine">
         <TabsList>
           <TabsTrigger value="mine">My board</TabsTrigger>
@@ -199,10 +263,13 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
             <Column title={`To apply (${toApply.length})`}>{toApply.map(card)}</Column>
             <Column title={`Applied (${applied.length})`}>{applied.map(card)}</Column>
           </div>
+          {skipped.length > 0 && (filters.status === "skipped" || filters.status === "all") && (
+            <div className="mt-6"><Column title={`Skipped (${skipped.length})`}>{skipped.map(card)}</Column></div>
+          )}
         </TabsContent>
         <TabsContent value="group" className="mt-4">
           <div className="space-y-3">
-            {groupSorted.length === 0 && <p className="text-muted-foreground">No jobs yet — post the first one!</p>}
+            {groupSorted.length === 0 && <p className="text-muted-foreground">{d.jobs.length ? "No jobs match these filters." : "No jobs yet — post the first one!"}</p>}
             {groupSorted.map((j) => {
               const who = appliedBy(j.id);
               const mine = myStatus(j.id);
@@ -306,12 +373,59 @@ function JobDialog({ job, onClose, score, scoring, onRegrade }: { job: Job | nul
               <DialogTitle className="font-display text-2xl">{job.role} · {job.company}</DialogTitle>
             </DialogHeader>
             <ScoreDetails score={score} scoring={scoring} onRegrade={onRegrade} />
+            <BulletImprover key={job.id} jobId={job.id} />
             {job.notes && <p className="rounded-lg bg-muted p-3 text-sm">{job.notes}</p>}
             <div className="whitespace-pre-wrap text-sm leading-relaxed">{job.description}</div>
           </>
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+const PRIORITY_TONE = { high: "bg-primary text-primary-foreground", medium: "bg-accent text-accent-foreground", low: "bg-muted text-muted-foreground" };
+
+function BulletImprover({ jobId }: { jobId: string }) {
+  const run = useServerFn(improveBullets);
+  const [busy, setBusy] = useState(false);
+  const [tips, setTips] = useState<BulletTip[] | null>(null);
+  const [custom, setCustom] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
+  async function go() {
+    setBusy(true);
+    const r = await run({ data: { jobId, resume: custom.trim() || null } });
+    setBusy(false);
+    if ("error" in r && r.error) { toast.error(r.error); return; }
+    if ("bullets" in r) setTips(r.bullets);
+  }
+  return (
+    <div className="rounded-xl border-2 border-foreground p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-semibold">ATS bullet improvements</span>
+        <div className="flex gap-2">
+          <Button size="sm" variant="ghost" onClick={() => setShowCustom((s) => !s)}>{showCustom ? "Use my saved resume" : "Paste a different resume"}</Button>
+          <Button size="sm" onClick={go} disabled={busy}><Sparkles className={`size-4 ${busy ? "animate-pulse" : ""}`} /> {busy ? "Writing…" : tips ? "Regenerate" : "Improve my bullets"}</Button>
+        </div>
+      </div>
+      {showCustom && <Textarea className="mt-3" rows={5} placeholder="Paste the resume to tailor for this job…" value={custom} onChange={(e) => setCustom(e.target.value)} />}
+      {tips && (
+        <ol className="mt-3 space-y-3 text-sm">
+          {tips.map((t, i) => (
+            <li key={i} className="rounded-lg bg-muted/50 p-3">
+              <div className="mb-1 flex items-center gap-2">
+                <span className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${PRIORITY_TONE[t.priority]}`}>{t.priority}</span>
+                <span className="text-xs text-muted-foreground">{t.why}</span>
+                <button className="ml-auto text-muted-foreground hover:text-foreground" aria-label="Copy bullet"
+                  onClick={() => { navigator.clipboard.writeText(t.improved); toast.success("Copied"); }}><Copy className="size-4" /></button>
+              </div>
+              {t.original && <p className="text-muted-foreground line-through">{t.original}</p>}
+              <p className="font-medium">{t.improved}</p>
+              {t.keywords.length > 0 && <div className="mt-1 flex flex-wrap gap-1">{t.keywords.map((k) => <span key={k} className="rounded-md bg-success/20 px-1.5 py-0.5 text-xs">{k}</span>)}</div>}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   );
 }
 

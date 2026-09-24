@@ -3,6 +3,7 @@ import { template as newJob } from './new-job'
 import { template as friendApplied } from './friend-applied'
 import { template as groupInvite } from './group-invite'
 import { template as jobDigest } from './job-digest'
+import { template as weeklyReminder } from './weekly-reminder'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -26,4 +27,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'friend-applied': friendApplied,
   'group-invite': groupInvite,
   'job-digest': jobDigest,
+  'weekly-reminder': weeklyReminder,
 }

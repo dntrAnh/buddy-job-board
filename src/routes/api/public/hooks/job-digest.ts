@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/public/hooks/job-digest")({
           return new Response("Unauthorized", { status: 401 });
         }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+        const { sendAndLog } = await import("@/lib/email-log.server");
 
         const since = new Date(Date.now() - WINDOW_HOURS * 3600 * 1000);
         const windowKey = Math.floor(Date.now() / (WINDOW_HOURS * 3600 * 1000));
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/hooks/job-digest")({
         ]);
         const userIds = [...new Set((members ?? []).map((m) => m.user_id))];
         const { data: profiles } = await supabaseAdmin
-          .from("profiles").select("id, email, reminder_mode").in("id", userIds).eq("reminder_mode", "easy");
+          .from("profiles").select("id, email, reminder_mode").in("id", userIds).eq("reminder_mode", "easy").eq("email_new_jobs", true);
         const acted = new Set((apps ?? []).map((a) => `${a.job_id}:${a.user_id}`));
 
         let sent = 0;
@@ -37,15 +37,13 @@ export const Route = createFileRoute("/api/public/hooks/job-digest")({
           const myGroups = new Set((members ?? []).filter((m) => m.user_id === p.id).map((m) => m.group_id));
           const list = jobs.filter((j) => myGroups.has(j.group_id) && j.posted_by !== p.id && !acted.has(`${j.id}:${p.id}`));
           if (!list.length) continue;
-          try {
-            const r = await sendTemplateEmail("job-digest", p.email, {
-              templateData: { jobs: list.map((j) => ({ company: j.company, role: j.role })), boardUrl: BOARD_URL },
-              idempotencyKey: `job-digest-${p.id}-${windowKey}`,
-            });
-            if (r.sent) sent++;
-          } catch (e) {
-            console.error("digest send failed", e);
-          }
+          const ok = await sendAndLog({
+            template: "job-digest", to: p.email, recipientId: p.id, groupId: null,
+            label: `Digest: ${list.length} new jobs`,
+            templateData: { jobs: list.map((j) => ({ company: j.company, role: j.role })), boardUrl: BOARD_URL },
+            idempotencyKey: `job-digest-${p.id}-${windowKey}`,
+          });
+          if (ok) sent++;
         }
         return Response.json({ sent });
       },

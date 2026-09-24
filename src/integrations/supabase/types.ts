@@ -43,6 +43,47 @@ export type Database = {
           },
         ]
       }
+      email_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          group_id: string | null
+          id: string
+          kind: string
+          recipient_id: string
+          status: string
+          subject_label: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          group_id?: string | null
+          id?: string
+          kind: string
+          recipient_id: string
+          status: string
+          subject_label?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          group_id?: string | null
+          id?: string
+          kind?: string
+          recipient_id?: string
+          status?: string
+          subject_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           group_id: string
@@ -212,6 +253,9 @@ export type Database = {
           created_at: string
           display_name: string
           email: string
+          email_new_jobs: boolean
+          email_nudges: boolean
+          email_weekly: boolean
           id: string
           onboarded: boolean
           reminder_mode: string
@@ -222,6 +266,9 @@ export type Database = {
           created_at?: string
           display_name?: string
           email: string
+          email_new_jobs?: boolean
+          email_nudges?: boolean
+          email_weekly?: boolean
           id: string
           onboarded?: boolean
           reminder_mode?: string
@@ -232,6 +279,9 @@ export type Database = {
           created_at?: string
           display_name?: string
           email?: string
+          email_new_jobs?: boolean
+          email_nudges?: boolean
+          email_weekly?: boolean
           id?: string
           onboarded?: boolean
           reminder_mode?: string
