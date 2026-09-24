@@ -6,3 +6,7 @@
 - [x] ATS scoring + re-grade + suggestions
 - [x] Reminder mode control in corner
 - [x] Emails (invites, new job, friend-applied, easy digest 3x/day)
+- [ ] Group management page (members, remove, invites, 15 capacity)
+- [ ] AI resume bullet improvements per job
+- [ ] Email: per-type opt-outs, weekly reminders, delivery status log
+- [ ] Board filters & sorting (company, role, match, status, date)
