@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedBoardRouteImport } from './routes/_authenticated/board'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as ApiPublicHooksJobDigestRouteImport } from './routes/api/public/hooks/job-digest'
+import { Route as ApiPublicHooksWeeklyReminderRouteImport } from './routes/api/public/hooks/weekly-reminder'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -48,6 +49,12 @@ const ApiPublicHooksJobDigestRoute = ApiPublicHooksJobDigestRouteImport.update({
   path: '/api/public/hooks/job-digest',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksWeeklyReminderRoute =
+  ApiPublicHooksWeeklyReminderRouteImport.update({
+    id: '/api/public/hooks/weekly-reminder',
+    path: '/api/public/hooks/weekly-reminder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/board': typeof AuthenticatedBoardRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
+  '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -81,6 +89,7 @@ export interface FileRoutesByTo {
   '/board': typeof AuthenticatedBoardRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
+  '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -93,6 +102,7 @@ export interface FileRoutesById {
   '/_authenticated/board': typeof AuthenticatedBoardRoute
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
+  '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/board'
     | '/resume'
     | '/api/public/hooks/job-digest'
+    | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '/board'
     | '/resume'
     | '/api/public/hooks/job-digest'
+    | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
     | '/_authenticated/board'
     | '/_authenticated/resume'
     | '/api/public/hooks/job-digest'
+    | '/api/public/hooks/weekly-reminder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -136,6 +149,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicHooksJobDigestRoute: typeof ApiPublicHooksJobDigestRoute
+  ApiPublicHooksWeeklyReminderRoute: typeof ApiPublicHooksWeeklyReminderRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -185,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksJobDigestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/weekly-reminder': {
+      id: '/api/public/hooks/weekly-reminder'
+      path: '/api/public/hooks/weekly-reminder'
+      fullPath: '/api/public/hooks/weekly-reminder'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -227,6 +248,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicHooksJobDigestRoute: ApiPublicHooksJobDigestRoute,
+  ApiPublicHooksWeeklyReminderRoute: ApiPublicHooksWeeklyReminderRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
