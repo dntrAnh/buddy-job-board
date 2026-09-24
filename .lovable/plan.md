@@ -27,7 +27,7 @@ A small invite-only job board: anyone in a group pastes a job, everyone else get
 - One click marks a job as applied (or skipped, so it stops nagging).
 
 **Group board**
-- The full job list with, per job, avatars/names of who applied and who hasn't.
+- The full job list with, per job, avatars/names of who applied.
 - Sorted to surface jobs where friends have applied but you haven't.
 
 **Emails**
