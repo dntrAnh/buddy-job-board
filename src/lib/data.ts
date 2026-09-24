@@ -35,7 +35,7 @@ export async function ensureProfile(userId: string, email: string): Promise<Prof
   if (data) return data as Profile;
   const { data: created, error } = await supabase
     .from("profiles")
-    .insert({ id: userId, email, display_name: email.split("@")[0] })
+    .insert({ id: userId, email, display_name: email.split("@")[0] ?? "" })
     .select("*")
     .single();
   if (error) throw error;

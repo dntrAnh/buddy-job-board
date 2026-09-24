@@ -50,7 +50,7 @@ function Board() {
 
   async function acceptInvite(id: string) {
     const { data, error } = await supabase.rpc("accept_invite", { _invite: id });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries();
     setGroupId(data as string);
     toast.success("You joined the group!");
@@ -60,7 +60,7 @@ function Board() {
     const name = prompt("Group name?");
     if (!name?.trim()) return;
     const { data, error } = await supabase.from("groups").insert({ name: name.trim(), created_by: user.id }).select("id").single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["groups"] });
     setGroupId(data.id);
   }
@@ -71,7 +71,7 @@ function Board() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
           <Link to="/" className="font-display text-xl font-bold">Crew Board</Link>
           {groupsQ.data && groupsQ.data.length > 0 && (
-            <Select value={groupId ?? undefined} onValueChange={setGroupId}>
+            <Select value={groupId ?? ""} onValueChange={setGroupId}>
               <SelectTrigger className="w-48"><SelectValue placeholder="Pick a group" /></SelectTrigger>
               <SelectContent>
                 {groupsQ.data.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
@@ -250,7 +250,7 @@ function Column({ title, children }: { title: string; children: React.ReactNode 
   );
 }
 
-export function ScoreBadge({ score, scoring }: { score?: Score; scoring?: boolean }) {
+export function ScoreBadge({ score, scoring }: { score?: Score | undefined; scoring?: boolean | undefined }) {
   if (scoring) return <span className="rounded-lg border-2 border-foreground px-2 py-1 text-xs font-bold">Scoring…</span>;
   if (!score) return <span className="rounded-lg border-2 border-dashed border-muted-foreground px-2 py-1 text-xs text-muted-foreground">No score</span>;
   const tone = score.score >= 75 ? "bg-success text-success-foreground" : score.score >= 50 ? "bg-accent text-accent-foreground" : "bg-destructive text-destructive-foreground";
@@ -258,7 +258,7 @@ export function ScoreBadge({ score, scoring }: { score?: Score; scoring?: boolea
 }
 
 function JobCard(props: {
-  job: Job; score?: Score; scoring: boolean; hasResume: boolean; status?: "applied" | "skipped";
+  job: Job; score?: Score | undefined; scoring: boolean; hasResume: boolean; status?: "applied" | "skipped" | undefined;
   appliedNames: string[]; onOpen: () => void; onStatus: (s: "applied" | "skipped" | null) => void; onRegrade: () => void;
 }) {
   const { job, status } = props;
@@ -291,7 +291,7 @@ function JobCard(props: {
   );
 }
 
-function JobDialog({ job, onClose, score, scoring, onRegrade }: { job: Job | null; onClose: () => void; score?: Score; scoring: boolean; onRegrade: () => void }) {
+function JobDialog({ job, onClose, score, scoring, onRegrade }: { job: Job | null; onClose: () => void; score?: Score | undefined; scoring: boolean; onRegrade: () => void }) {
   return (
     <Dialog open={!!job} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
@@ -310,7 +310,7 @@ function JobDialog({ job, onClose, score, scoring, onRegrade }: { job: Job | nul
   );
 }
 
-export function ScoreDetails({ score, scoring, onRegrade }: { score?: Score; scoring: boolean; onRegrade: () => void }) {
+export function ScoreDetails({ score, scoring, onRegrade }: { score?: Score | undefined; scoring: boolean; onRegrade: () => void }) {
   return (
     <div className="rounded-xl border-2 border-foreground p-4">
       <div className="flex items-center justify-between">
@@ -357,7 +357,7 @@ function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean;
       description: f.description.trim(), link: f.link.trim() || null, notes: f.notes.trim() || null,
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Job posted to the group!");
     setF({ company: "", role: "", description: "", link: "", notes: "" });
     onOpenChange(false);
@@ -389,7 +389,7 @@ function InviteDialog({ open, onOpenChange, groupId, userId, pending }: { open: 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const { error } = await supabase.from("invites").insert({ group_id: groupId, email: email.trim().toLowerCase(), invited_by: userId });
-    if (error) return toast.error(error.message.includes("duplicate") ? "Already invited." : error.message);
+    if (error) { toast.error(error.message.includes("duplicate") ? "Already invited." : error.message); return; }
     toast.success("Invite added — they'll see it when they sign in with that email.");
     setEmail("");
     qc.invalidateQueries({ queryKey: ["group", groupId] });
@@ -430,7 +430,7 @@ function Onboarding({ profile }: { profile: Profile }) {
   const [mode, setMode] = useState<Profile["reminder_mode"]>(profile.reminder_mode);
   async function save() {
     const { error } = await supabase.from("profiles").update({ display_name: name.trim() || profile.email, resume, reminder_mode: mode, onboarded: true }).eq("id", profile.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["profile"] });
   }
   return (

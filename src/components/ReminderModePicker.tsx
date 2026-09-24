@@ -16,7 +16,7 @@ export function ReminderModePicker({ profile }: { profile: Profile }) {
   const qc = useQueryClient();
   async function pick(mode: Profile["reminder_mode"]) {
     const { error } = await supabase.from("profiles").update({ reminder_mode: mode }).eq("id", profile.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["profile"] });
     toast.success(`Reminders: ${mode}`);
   }
