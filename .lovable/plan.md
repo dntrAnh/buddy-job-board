@@ -7,7 +7,7 @@ A small invite-only job board: anyone in a group pastes a job, everyone else get
 **Groups & invites**
 - Sign up / sign in with email.
 - Create a group, or join by accepting an emailed invite.
-- Members invite by email address; only invited addresses can join that group.
+- Members invite by email address; only invited addresses can join that group. Groups are capped at 15 members (pending invites count toward the cap).
 - A person can belong to several groups; a group switcher picks the active board.
 
 **Posting a job**
