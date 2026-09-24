@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Crew Connect"
+const SITE_NAME = "Crew Board"
 const SENDER_DOMAIN = "hello.ameliado.com"
 const ROOT_DOMAIN = "ameliado.com"
 const FROM_DOMAIN = "hello.ameliado.com"
