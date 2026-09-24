@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalLink, RefreshCw, Plus, UserPlus, Check, SkipForward, Undo2, Bell, Users, Mail, Sparkles, Copy } from "lucide-react";
 import { ReminderModePicker } from "@/components/ReminderModePicker";
 import { improveBullets, type BulletTip } from "@/lib/bullets.functions";
+import { importJobFromLink } from "@/lib/import-job.functions";
 
 type Filters = { q: string; status: "all" | "todo" | "applied" | "skipped"; minMatch: number; sort: "newest" | "oldest" | "match" | "company" | "role" | "friends" };
 const DEFAULT_FILTERS: Filters = { q: "", status: "all", minMatch: 0, sort: "newest" };
@@ -485,17 +486,40 @@ function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean;
     qc.invalidateQueries({ queryKey: ["group", groupId] });
   }
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
+  const importJob = useServerFn(importJobFromLink);
+  const [fetching, setFetching] = useState(false);
+  async function fetchFromLink(url: string) {
+    if (!/^https?:\/\//.test(url.trim())) return;
+    setFetching(true);
+    const r = await importJob({ data: { url: url.trim() } });
+    setFetching(false);
+    if ("error" in r && r.error) { toast.error(r.error); return; }
+    if ("ok" in r) {
+      setF((cur) => ({ ...cur, link: url.trim(), company: r.company || cur.company, role: r.role || cur.role, description: r.description || cur.description }));
+      toast.success("Job details filled in — check and post!");
+    }
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
         <DialogHeader><DialogTitle className="font-display text-2xl">Post a job</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-3">
+          <div className="space-y-1">
+            <Label>Job link</Label>
+            <div className="flex gap-2">
+              <Input type="url" placeholder="Paste the job link — we'll fill in the rest" value={f.link} onChange={set("link")}
+                onPaste={(e) => { const t = e.clipboardData.getData("text"); setTimeout(() => fetchFromLink(t), 0); }} />
+              <Button type="button" variant="outline" disabled={fetching || !f.link} onClick={() => fetchFromLink(f.link)}>
+                <Sparkles className={`size-4 ${fetching ? "animate-pulse" : ""}`} /> {fetching ? "Reading…" : "Fill"}
+              </Button>
+            </div>
+            {fetching && <p className="text-xs text-muted-foreground">Reading the job post… this takes a few seconds.</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1"><Label>Company</Label><Input required value={f.company} onChange={set("company")} /></div>
             <div className="space-y-1"><Label>Role</Label><Input required value={f.role} onChange={set("role")} /></div>
           </div>
-          <div className="space-y-1"><Label>Job description</Label><Textarea required rows={8} placeholder="Paste the full JD…" value={f.description} onChange={set("description")} /></div>
-          <div className="space-y-1"><Label>Link (optional)</Label><Input type="url" value={f.link} onChange={set("link")} /></div>
+          <div className="space-y-1"><Label>Job description</Label><Textarea required rows={8} placeholder="Filled in from the link, or paste the full JD…" value={f.description} onChange={set("description")} /></div>
           <div className="space-y-1"><Label>Notes (optional)</Label><Input value={f.notes} onChange={set("notes")} /></div>
           <Button className="w-full" disabled={busy}>Post & notify group</Button>
         </form>
