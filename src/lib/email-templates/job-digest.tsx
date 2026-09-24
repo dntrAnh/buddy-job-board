@@ -27,7 +27,7 @@ const JobDigestEmail = ({ jobs = [], boardUrl }: Props) => (
 export const template = {
   component: JobDigestEmail,
   subject: (d: Record<string, any>) => {
-    const n = Array.isArray(d.jobs) ? d.jobs.length : 0
+    const n = Array.isArray(d['jobs']) ? d['jobs'].length : 0
     return `${n} new job${n === 1 ? '' : 's'} from your crew`
   },
   displayName: 'New jobs digest (easy mode)',

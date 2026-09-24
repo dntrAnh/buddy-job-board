@@ -24,7 +24,7 @@ const NewJobEmail = ({ posterName, company, role, groupName, boardUrl }: Props) 
 
 export const template = {
   component: NewJobEmail,
-  subject: (d: Record<string, any>) => `New job: ${d.role ?? 'a role'} at ${d.company ?? 'a company'} — go apply`,
+  subject: (d: Record<string, any>) => `New job: ${d['role'] ?? 'a role'} at ${d['company'] ?? 'a company'} — go apply`,
   displayName: 'New job posted',
   previewData: { posterName: 'Jess', company: 'Stripe', role: 'Product Designer', groupName: 'Job Crew', boardUrl: 'https://example.com/board' },
 } satisfies TemplateEntry

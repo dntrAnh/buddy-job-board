@@ -24,7 +24,7 @@ const GroupInviteEmail = ({ inviterName, groupName, signupUrl }: Props) => (
 
 export const template = {
   component: GroupInviteEmail,
-  subject: (d: Record<string, any>) => `${d.inviterName ?? 'A friend'} invited you to ${d.groupName ?? 'their job crew'}`,
+  subject: (d: Record<string, any>) => `${d['inviterName'] ?? 'A friend'} invited you to ${d['groupName'] ?? 'their job crew'}`,
   displayName: 'Group invite',
   previewData: { inviterName: 'Amelia', groupName: 'Job Crew', signupUrl: 'https://example.com/auth' },
 } satisfies TemplateEntry

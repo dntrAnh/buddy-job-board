@@ -24,7 +24,7 @@ const FriendAppliedEmail = ({ friendName, company, role, boardUrl }: Props) => (
 
 export const template = {
   component: FriendAppliedEmail,
-  subject: (d: Record<string, any>) => `${d.friendName ?? 'A friend'} applied to ${d.company ?? 'a job'} — your turn`,
+  subject: (d: Record<string, any>) => `${d['friendName'] ?? 'A friend'} applied to ${d['company'] ?? 'a job'} — your turn`,
   displayName: 'Friend applied nudge',
   previewData: { friendName: 'Sam', company: 'Figma', role: 'Frontend Engineer', boardUrl: 'https://example.com/board' },
 } satisfies TemplateEntry
