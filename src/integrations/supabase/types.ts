@@ -14,13 +14,244 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          job_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          job_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          job_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      invites: {
+        Row: {
+          accepted: boolean
+          created_at: string
+          email: string
+          group_id: string
+          id: string
+          invited_by: string
+        }
+        Insert: {
+          accepted?: boolean
+          created_at?: string
+          email: string
+          group_id: string
+          id?: string
+          invited_by: string
+        }
+        Update: {
+          accepted?: boolean
+          created_at?: string
+          email?: string
+          group_id?: string
+          id?: string
+          invited_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          company: string
+          created_at: string
+          description: string
+          group_id: string
+          id: string
+          link: string | null
+          notes: string | null
+          posted_by: string
+          role: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          description: string
+          group_id: string
+          id?: string
+          link?: string | null
+          notes?: string | null
+          posted_by: string
+          role: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          description?: string
+          group_id?: string
+          id?: string
+          link?: string | null
+          notes?: string | null
+          posted_by?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_scores: {
+        Row: {
+          job_id: string
+          matched: string[]
+          missing: string[]
+          score: number
+          suggestions: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          job_id: string
+          matched?: string[]
+          missing?: string[]
+          score: number
+          suggestions?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          job_id?: string
+          matched?: string[]
+          missing?: string[]
+          score?: number
+          suggestions?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_scores_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          onboarded: boolean
+          reminder_mode: string
+          resume: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          email: string
+          id: string
+          onboarded?: boolean
+          reminder_mode?: string
+          resume?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          email?: string
+          id?: string
+          onboarded?: boolean
+          reminder_mode?: string
+          resume?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_invite: { Args: { _invite: string }; Returns: string }
+      is_group_member: {
+        Args: { _group: string; _user: string }
+        Returns: boolean
+      }
+      job_group: { Args: { _job: string }; Returns: string }
+      shares_group: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
