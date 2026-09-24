@@ -19,7 +19,7 @@ A small invite-only job board: anyone in a group pastes a job, everyone else get
 - Each person saves their resume text once in their profile.
 - When a job is posted, the app scores each member's resume against that job description and shows a match percentage on their own board (each person sees only their own score).
 - People can edit their resume at any time and click "Re-grade" (per job, or for all jobs) to instantly re-score against the new version and see how the changes improved their match.
-- Scores are computed with built-in AI, no external account needed.
+- Scoring works like an ATS: built-in AI pulls the keywords from the job post, checks which appear in your primary resume, and gives a score plus matched/missing keywords and a few short, direct suggestions for changes (only when needed). No external account needed.
 
 **My board (dashboard)**
 - Two columns: "To apply" and "Applied".
