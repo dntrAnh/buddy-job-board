@@ -4,8 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ensureProfile, fetchGroupData, fetchGroups, fetchPendingInvites, type Job, type Profile, type Score } from "@/lib/data";
+import { ensureProfile, fetchGroupData, fetchGroups, fetchPendingInvites, type Job, type Profile, type SavedResume, type Score } from "@/lib/data";
 import { scoreJob } from "@/lib/scoring.functions";
+import { saveResumeVersion } from "@/lib/resumes.functions";
 import { notifyApplied, notifyInvite, notifyNewJob } from "@/lib/notify.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalLink, RefreshCw, Plus, UserPlus, Check, SkipForward, Undo2, Bell, Users, Mail, Sparkles, Copy } from "lucide-react";
 import { ReminderModePicker } from "@/components/ReminderModePicker";
-import { improveBullets, type BulletTip } from "@/lib/bullets.functions";
+import { improveBullets, type BulletResult, type BulletTip } from "@/lib/bullets.functions";
 import { importJobFromLink } from "@/lib/import-job.functions";
 
 type Filters = { q: string; status: "all" | "todo" | "applied" | "skipped"; minMatch: number; sort: "newest" | "oldest" | "match" | "company" | "role" | "friends" };
@@ -180,6 +181,7 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
   const [posting, setPosting] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [openJob, setOpenJob] = useState<Job | null>(null);
+  const [improveJobId, setImproveJobId] = useState<string | null>(null);
   const score = useServerFn(scoreJob);
   const [scoring, setScoring] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
@@ -188,6 +190,7 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
   const d = q.data;
   const names = useMemo(() => new Map((d?.profiles ?? []).map((p) => [p.id, p.display_name || p.email])), [d]);
   const scoreMap = useMemo(() => new Map((d?.scores ?? []).map((s) => [s.job_id, s])), [d]);
+  const savedResumeMap = useMemo(() => new Map((d?.savedResumes ?? []).map((r) => [r.job_id, r])), [d]);
 
   async function runScore(jobId: string) {
     setScoring((s) => new Set(s).add(jobId));
@@ -250,10 +253,12 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
       job={j}
       score={scoreMap.get(j.id)}
       scoring={scoring.has(j.id)}
+      savedResume={savedResumeMap.get(j.id)}
       hasResume={!!profile.resume.trim()}
       status={myStatus(j.id)}
       appliedNames={appliedBy(j.id).filter((u) => u !== userId).map((u) => names.get(u) ?? "someone")}
-      onOpen={() => setOpenJob(j)}
+      onOpen={() => { setImproveJobId(null); setOpenJob(j); }}
+      onScoreClick={() => { setOpenJob(j); setImproveJobId(j.id); }}
       onStatus={(s) => setStatus(j.id, s)}
       onRegrade={() => runScore(j.id)}
     />
@@ -322,10 +327,16 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
       <InviteDialog open={inviting} onOpenChange={setInviting} groupId={groupId} userId={userId} pending={d.pendingInvites} />
       <JobDialog
         job={openJob}
-        onClose={() => setOpenJob(null)}
+        onClose={() => { setOpenJob(null); setImproveJobId(null); }}
         score={openJob ? scoreMap.get(openJob.id) : undefined}
         scoring={openJob ? scoring.has(openJob.id) : false}
         onRegrade={() => openJob && runScore(openJob.id)}
+        savedResume={openJob ? savedResumeMap.get(openJob.id) : undefined}
+        improveOnOpen={!!openJob && improveJobId === openJob.id}
+        onSaved={async () => {
+          await qc.invalidateQueries({ queryKey: ["group", groupId] });
+          if (openJob) await runScore(openJob.id);
+        }}
       />
     </>
   );
@@ -341,16 +352,19 @@ function Column({ title, children }: { title: string; children: React.ReactNode 
   );
 }
 
-export function ScoreBadge({ score, scoring }: { score?: Score | undefined; scoring?: boolean | undefined }) {
+export function ScoreBadge({ score, scoring, onClick }: { score?: Score | undefined; scoring?: boolean | undefined; onClick?: () => void }) {
   if (scoring) return <span className="rounded-lg border-2 border-foreground px-2 py-1 text-xs font-bold">Scoring…</span>;
   if (!score) return <span className="rounded-lg border-2 border-dashed border-muted-foreground px-2 py-1 text-xs text-muted-foreground">No score</span>;
   const tone = score.score >= 75 ? "bg-success text-success-foreground" : score.score >= 50 ? "bg-accent text-accent-foreground" : "bg-destructive text-destructive-foreground";
+  if (onClick) {
+    return <Button type="button" size="sm" variant="ghost" className={`h-auto rounded-lg border-2 border-foreground px-2 py-1 font-display text-sm font-bold ${tone}`} onClick={onClick} aria-label={`Improve ${score.score}% score`}>{score.score}%</Button>;
+  }
   return <span className={`rounded-lg border-2 border-foreground px-2 py-1 font-display text-sm font-bold ${tone}`}>{score.score}%</span>;
 }
 
 function JobCard(props: {
-  job: Job; score?: Score | undefined; scoring: boolean; hasResume: boolean; status?: "applied" | "skipped" | undefined;
-  appliedNames: string[]; onOpen: () => void; onStatus: (s: "applied" | "skipped" | null) => void; onRegrade: () => void;
+  job: Job; score?: Score | undefined; scoring: boolean; savedResume?: SavedResume | undefined; hasResume: boolean; status?: "applied" | "skipped" | undefined;
+  appliedNames: string[]; onOpen: () => void; onScoreClick: () => void; onStatus: (s: "applied" | "skipped" | null) => void; onRegrade: () => void;
 }) {
   const { job, status } = props;
   return (
@@ -360,8 +374,9 @@ function JobCard(props: {
           <div className="break-words font-display text-lg font-bold leading-tight">{job.role}</div>
           <div className="break-words text-sm text-muted-foreground">{job.company}</div>
         </button>
-        <ScoreBadge score={props.score} scoring={props.scoring} />
+        <ScoreBadge score={props.score} scoring={props.scoring} onClick={props.score ? props.onScoreClick : undefined} />
       </div>
+      {props.savedResume && <p className="mt-2 text-xs font-semibold text-muted-foreground">Saved resume for this role</p>}
       {props.appliedNames.length > 0 && (
         <p className="mt-2 text-sm"><span className="font-semibold">Applied:</span> {props.appliedNames.join(", ")}</p>
       )}
@@ -382,7 +397,7 @@ function JobCard(props: {
   );
 }
 
-function JobDialog({ job, onClose, score, scoring, onRegrade }: { job: Job | null; onClose: () => void; score?: Score | undefined; scoring: boolean; onRegrade: () => void }) {
+function JobDialog({ job, onClose, score, scoring, onRegrade, savedResume, improveOnOpen, onSaved }: { job: Job | null; onClose: () => void; score?: Score | undefined; scoring: boolean; onRegrade: () => void; savedResume?: SavedResume | undefined; improveOnOpen: boolean; onSaved: () => Promise<void> }) {
   return (
     <Dialog open={!!job} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
@@ -392,7 +407,7 @@ function JobDialog({ job, onClose, score, scoring, onRegrade }: { job: Job | nul
               <DialogTitle className="font-display text-2xl">{job.role} · {job.company}</DialogTitle>
             </DialogHeader>
             <ScoreDetails score={score} scoring={scoring} onRegrade={onRegrade} />
-            <BulletImprover key={job.id} jobId={job.id} />
+            <BulletImprover key={`${job.id}-${improveOnOpen ? "score" : "view"}`} jobId={job.id} score={score} savedResume={savedResume} autoRun={improveOnOpen} onSaved={onSaved} />
             {job.notes && <p className="rounded-lg bg-muted p-3 text-sm">{job.notes}</p>}
             <div className="whitespace-pre-wrap text-sm leading-relaxed">{job.description}</div>
           </>
@@ -404,35 +419,68 @@ function JobDialog({ job, onClose, score, scoring, onRegrade }: { job: Job | nul
 
 const PRIORITY_TONE = { high: "bg-primary text-primary-foreground", medium: "bg-accent text-accent-foreground", low: "bg-muted text-muted-foreground" };
 
-function BulletImprover({ jobId }: { jobId: string }) {
+type ImproveResult = BulletResult & { scoreBefore: number | null };
+
+function BulletImprover({ jobId, score, savedResume, autoRun, onSaved }: { jobId: string; score?: Score | undefined; savedResume?: SavedResume | undefined; autoRun: boolean; onSaved: () => Promise<void> }) {
   const run = useServerFn(improveBullets);
+  const saveVersion = useServerFn(saveResumeVersion);
   const [busy, setBusy] = useState(false);
-  const [tips, setTips] = useState<BulletTip[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<ImproveResult | null>(null);
   const [custom, setCustom] = useState("");
   const [showCustom, setShowCustom] = useState(false);
+  const autoRan = useRef(false);
   async function go() {
     setBusy(true);
     const r = await run({ data: { jobId, resume: custom.trim() || null } });
     setBusy(false);
     if ("error" in r && r.error) { toast.error(r.error); return; }
-    if ("bullets" in r) setTips(r.bullets);
+    if ("bullets" in r) setResult(r);
   }
+  async function saveTailored() {
+    if (!result?.tailoredResume.trim()) return;
+    setSaving(true);
+    const r = await saveVersion({ data: { jobId, resume: result.tailoredResume, scoreBefore: result.scoreBefore, scoreAfter: result.estimatedScoreAfter } });
+    setSaving(false);
+    if ("error" in r && r.error) { toast.error(r.error); return; }
+    await onSaved();
+    toast.success("Saved for this job");
+  }
+  useEffect(() => {
+    if (!autoRun || autoRan.current) return;
+    autoRan.current = true;
+    go();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRun]);
   return (
     <div className="rounded-xl border-2 border-foreground p-4">
       <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <span className="font-semibold">ATS bullet improvements</span>
+        <div>
+          <span className="font-semibold">ATS bullet improvements</span>
+          {savedResume && <p className="text-xs text-muted-foreground">Using your saved resume for this company and role.</p>}
+        </div>
         <div className="grid gap-2 sm:flex">
           <Button className="w-full sm:w-auto" size="sm" variant="ghost" onClick={() => setShowCustom((s) => !s)}>{showCustom ? "Use my saved resume" : "Paste a different resume"}</Button>
-          <Button className="w-full sm:w-auto" size="sm" onClick={go} disabled={busy}><Sparkles className={`size-4 ${busy ? "animate-pulse" : ""}`} /> {busy ? "Writing…" : tips ? "Regenerate" : "Improve my bullets"}</Button>
+          <Button className="w-full sm:w-auto" size="sm" onClick={go} disabled={busy}><Sparkles className={`size-4 ${busy ? "animate-pulse" : ""}`} /> {busy ? "Writing…" : result ? "Regenerate" : "Improve my bullets"}</Button>
         </div>
       </div>
       {showCustom && <Textarea className="mt-3" rows={5} placeholder="Paste the resume to tailor for this job…" value={custom} onChange={(e) => setCustom(e.target.value)} />}
-      {tips && (
-        <ol className="mt-3 space-y-3 text-sm">
-          {tips.map((t, i) => (
+      {busy && <p className="mt-3 text-sm text-muted-foreground">Finding the changes with the biggest score lift…</p>}
+      {result && (
+        <div className="mt-3 space-y-3 text-sm">
+          <div className="grid gap-2 rounded-lg bg-muted/50 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <div className="font-semibold">
+              Score estimate: {result.scoreBefore ?? score?.score ?? "—"}% → {result.estimatedScoreAfter}%
+            </div>
+            <Button size="sm" onClick={saveTailored} disabled={saving}>{saving ? "Saving…" : "Save for this job"}</Button>
+          </div>
+          <ol className="space-y-3">
+          {result.bullets.map((t, i) => (
             <li key={i} className="rounded-lg bg-muted/50 p-3">
-              <div className="mb-1 flex items-center gap-2">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
                 <span className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${PRIORITY_TONE[t.priority]}`}>{t.priority}</span>
+                <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold">+{t.estimatedLift}%</span>
+                <span className="text-xs font-semibold text-muted-foreground">{t.target}</span>
                 <span className="text-xs text-muted-foreground">{t.why}</span>
                 <button className="ml-auto text-muted-foreground hover:text-foreground" aria-label="Copy bullet"
                   onClick={() => { navigator.clipboard.writeText(t.improved); toast.success("Copied"); }}><Copy className="size-4" /></button>
@@ -442,7 +490,12 @@ function BulletImprover({ jobId }: { jobId: string }) {
               {t.keywords.length > 0 && <div className="mt-1 flex flex-wrap gap-1">{t.keywords.map((k) => <span key={k} className="rounded-md bg-success/20 px-1.5 py-0.5 text-xs">{k}</span>)}</div>}
             </li>
           ))}
-        </ol>
+          </ol>
+          <div className="space-y-2 rounded-lg border border-border p-3">
+            <div className="font-semibold">Tailored resume draft</div>
+            <Textarea readOnly rows={8} value={result.tailoredResume} />
+          </div>
+        </div>
       )}
     </div>
   );
