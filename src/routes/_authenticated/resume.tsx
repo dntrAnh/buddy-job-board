@@ -149,7 +149,7 @@ function ResumePage() {
               {savedQ.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
               {!savedQ.isLoading && (savedQ.data ?? []).length === 0 && <p className="rounded-xl border-2 border-dashed border-foreground p-4 text-sm text-muted-foreground">No job-specific resumes saved yet.</p>}
               {(savedQ.data ?? []).map((saved) => (
-                <SavedResumeRow key={saved.id} saved={saved} onSave={saveSavedVersion} onDelete={removeSavedVersion} />
+                <SavedResumeRow key={saved.id} saved={saved} onSave={saveSavedVersion} onRequestDelete={() => setPendingDelete(saved)} />
               ))}
             </div>
           </section>
