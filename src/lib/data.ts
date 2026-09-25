@@ -29,6 +29,18 @@ export type Score = {
   suggestions: string[];
   updated_at: string;
 };
+export type SavedResume = {
+  id: string;
+  user_id: string;
+  job_id: string;
+  company: string;
+  role: string;
+  resume: string;
+  score_before: number | null;
+  score_after: number | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export async function ensureProfile(userId: string, email: string): Promise<Profile> {
   const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
@@ -69,13 +81,16 @@ export async function fetchGroupData(groupId: string, userId: string) {
   const jobList = (jobs.data ?? []) as Job[];
   const ids = jobList.map((j) => j.id);
   const memberIds = (members.data ?? []).map((m) => m.user_id);
-  const [apps, scores, profiles] = await Promise.all([
+  const [apps, scores, profiles, savedResumes] = await Promise.all([
     ids.length ? supabase.from("applications").select("*").in("job_id", ids) : Promise.resolve({ data: [] }),
     ids.length
       ? supabase.from("match_scores").select("*").in("job_id", ids).eq("user_id", userId)
       : Promise.resolve({ data: [] }),
     memberIds.length
       ? supabase.from("profiles").select("id, display_name, email").in("id", memberIds)
+      : Promise.resolve({ data: [] }),
+    ids.length
+      ? supabase.from("saved_resumes").select("*").in("job_id", ids).eq("user_id", userId)
       : Promise.resolve({ data: [] }),
   ]);
   return {
@@ -85,5 +100,6 @@ export async function fetchGroupData(groupId: string, userId: string) {
     applications: (apps.data ?? []) as Application[],
     scores: (scores.data ?? []) as Score[],
     profiles: (profiles.data ?? []) as { id: string; display_name: string; email: string }[],
+    savedResumes: (savedResumes.data ?? []) as SavedResume[],
   };
 }
