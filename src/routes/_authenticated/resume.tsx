@@ -209,10 +209,9 @@ function SavedResumeRow({ saved, onSave, onRequestDelete }: { saved: SavedResume
     setBusy(false);
   }
 
-  async function remove() {
-    setBusy(true);
-    await onDelete(saved.id);
-    setBusy(false);
+  function remove() {
+    if (busy) return;
+    onRequestDelete();
   }
 
   return (
