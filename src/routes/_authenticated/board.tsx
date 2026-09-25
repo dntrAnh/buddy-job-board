@@ -158,7 +158,7 @@ function Board() {
               </SelectContent>
             </Select>
           )}
-          <Button className="w-full lg:col-start-3 lg:row-start-1 lg:w-auto" variant="ghost" size="sm" onClick={newGroup}><Plus className="size-4" /> New group</Button>
+          <Button className="w-full lg:col-start-3 lg:row-start-1 lg:w-auto" variant="ghost" size="sm" onClick={() => setNewGroupOpen(true)}><Plus className="size-4" /> New group</Button>
           <div className="col-span-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:col-span-5 lg:row-start-2 lg:justify-self-end">
             {groupId && <Link className="min-w-0" to="/groups/$groupId" params={{ groupId }}><Button className="w-full" variant="ghost" size="sm"><Users className="size-4" /> Manage</Button></Link>}
             <Link className="min-w-0" to="/settings"><Button className="w-full" variant="ghost" size="sm"><Mail className="size-4" /> Emails</Button></Link>
