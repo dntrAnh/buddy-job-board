@@ -8,7 +8,7 @@ import { notifyInvite, removeMember } from "@/lib/notify.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Crown, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Copy, Crown, Trash2, UserPlus, X } from "lucide-react";
 import { DeliveryList, type EmailEvent } from "@/components/DeliveryList";
 
 const CAP = 15;
@@ -103,6 +103,19 @@ function ManageGroup() {
             <Button disabled={left <= 0}><UserPlus className="size-4" /> Invite</Button>
           </form>
           {left <= 0 && <p className="mt-2 text-sm text-destructive">Remove a member or cancel an invite to free a seat.</p>}
+          <div className="mt-5 border-t border-border pt-4">
+            <div className="mb-1 font-semibold">Or share an invite link</div>
+            <p className="mb-2 text-sm text-muted-foreground">Anyone with this link can join while there are seats left.</p>
+            <div className="flex gap-2">
+              <Input readOnly value={inviteUrl} onFocus={(e) => e.currentTarget.select()} />
+              <Button type="button" onClick={copyLink} disabled={left <= 0}><Copy className="size-4" /> Copy</Button>
+            </div>
+            {isOwner && (
+              <button type="button" className="mt-2 text-xs text-muted-foreground underline" onClick={resetLink}>
+                Reset link (old links stop working)
+              </button>
+            )}
+          </div>
         </section>
 
         <section className="rounded-2xl border-2 border-foreground bg-card p-5">
