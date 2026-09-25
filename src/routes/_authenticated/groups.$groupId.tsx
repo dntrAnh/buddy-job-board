@@ -59,6 +59,18 @@ function ManageGroup() {
   const left = CAP - used;
   const name = (id: string) => profiles.find((p) => p.id === id);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["manage", groupId] }); qc.invalidateQueries({ queryKey: ["group", groupId] }); };
+  const inviteUrl = `${window.location.origin}/join/${group.invite_token}`;
+  async function copyLink() {
+    await navigator.clipboard.writeText(inviteUrl);
+    toast.success("Link copied — send it to your friend!");
+  }
+  async function resetLink() {
+    if (!confirm("Reset the link? Anyone with the old link won't be able to join.")) return;
+    const { error } = await supabase.from("groups").update({ invite_token: crypto.randomUUID() }).eq("id", groupId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("New link ready.");
+    refresh();
+  }
 
   async function invite(e: React.FormEvent) {
     e.preventDefault();
