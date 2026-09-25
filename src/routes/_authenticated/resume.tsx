@@ -92,11 +92,14 @@ function ResumePage() {
   }
 
   async function removeSavedVersion(id: string) {
-    if (!window.confirm("Delete this saved resume version?")) return;
+    if (!pendingDelete) return;
+    setDeleting(true);
     const r = await deleteSaved({ data: { id } });
+    setDeleting(false);
     if ("error" in r && r.error) { toast.error(r.error); return; }
     await qc.invalidateQueries({ queryKey: ["saved-resumes", user.id] });
     await qc.invalidateQueries({ queryKey: ["group"] });
+    setPendingDelete(null);
     toast.success("Resume version deleted");
   }
 
