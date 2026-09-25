@@ -179,7 +179,7 @@ function Board() {
           <div className="rounded-2xl border-2 border-dashed border-foreground p-10 text-center">
             <h2 className="font-display text-2xl font-bold">No group yet</h2>
             <p className="mt-2 text-muted-foreground">Create one and invite up to 14 friends, or accept an invite above.</p>
-            <Button className="mt-4" onClick={newGroup}>Create a group</Button>
+            <Button className="mt-4" onClick={() => setNewGroupOpen(true)}>Create a group</Button>
           </div>
         )}
         {groupId && profile && <GroupView key={groupId} groupId={groupId} profile={profile} userId={user.id} />}
