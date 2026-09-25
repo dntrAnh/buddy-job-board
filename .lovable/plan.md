@@ -1,0 +1,21 @@
+# Plan
+
+## What will change
+- Add saved resume versions for each job, labeled by company and role.
+- Let you click a score to open a compact popup with prioritized resume changes.
+- Each suggestion will show an estimated score lift and the exact bullet/change to make.
+- Add a “save tailored resume” action so the AI result is stored for that specific job.
+- Redesign “My resume” so it shows a compact list of saved resumes first, with full text only when opened.
+- Save a real resume into your current account so the suggestions have useful material to work from.
+
+## Technical details
+- Add a private `saved_resumes` table tied to the signed-in user and a job.
+- Update the AI resume helper to return prioritized changes with estimated score impact and a complete tailored resume draft.
+- Add create/update/delete helpers for saved resumes using the existing signed-in backend checks.
+- Update the board score badge to open the improvement popup instead of only showing the number.
+- Keep the primary resume as a fallback, but use job-specific saved resumes when they exist.
+
+## Verification
+- Check the app has no build errors.
+- Open the board/resume pages in the browser and verify the popup and compact resume list render.
+- Make one AI suggestion request against a real job if a job is available in the account.
