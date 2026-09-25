@@ -8,7 +8,7 @@ import { notifyInvite, removeMember } from "@/lib/notify.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Copy, Crown, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Copy, Crown, Share2, Trash2, UserPlus, X } from "lucide-react";
 
 const CAP = 15;
 
@@ -58,9 +58,27 @@ function ManageGroup() {
   const name = (id: string) => profiles.find((p) => p.id === id);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["manage", groupId] }); qc.invalidateQueries({ queryKey: ["group", groupId] }); };
   const inviteUrl = `${window.location.origin}/join/${group.invite_token}`;
-  async function copyLink() {
-    await navigator.clipboard.writeText(inviteUrl);
-    toast.success("Link copied — send it to your friend!");
+  const inviteTitle = `Join ${group.name} on Crew Board`;
+  const inviteText = `You're invited to ${group.name}, a private job crew where friends share roles, compare ATS matches, and remind each other to apply.`;
+  const inviteMessage = `${inviteText}\n${inviteUrl}`;
+  async function copyInviteMessage() {
+    try {
+      await navigator.clipboard.writeText(inviteMessage);
+      toast.success("Invite copied — paste it to your friend!");
+    } catch {
+      toast.error("Couldn't copy the invite.");
+    }
+  }
+  async function shareInvite() {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: inviteTitle, text: inviteText, url: inviteUrl });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+    await copyInviteMessage();
   }
   async function resetLink() {
     if (!confirm("Reset the link? Anyone with the old link won't be able to join.")) return;
@@ -114,16 +132,21 @@ function ManageGroup() {
           </form>
           {left <= 0 && <p className="mt-2 text-sm text-destructive">Remove a member or cancel an invite to free a seat.</p>}
           <div className="mt-5 border-t border-border pt-4">
-            <div className="mb-1 font-semibold">Or share an invite link</div>
-            <p className="mb-2 text-sm text-muted-foreground">Anyone with this link can join while there are seats left.</p>
-            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-              <Input className="min-w-0" readOnly value={inviteUrl} onFocus={(e) => e.currentTarget.select()} />
-              <Button className="w-full sm:w-auto" type="button" onClick={copyLink} disabled={left <= 0}><Copy className="size-4" /> Copy link</Button>
+            <div className="mb-2 font-semibold">Share an invite</div>
+            <div className="rounded-lg border-2 border-foreground bg-secondary p-4">
+              <p className="text-xs font-bold uppercase text-muted-foreground">Crew Board invite</p>
+              <p className="mt-1 break-words font-display text-xl font-bold">Join {group.name}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{inviteText}</p>
+              <p className="mt-3 truncate rounded-md border border-border bg-background px-3 py-2 text-xs text-muted-foreground">{inviteUrl}</p>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <Button className="w-full" type="button" onClick={shareInvite} disabled={left <= 0}><Share2 className="size-4" /> Share invite</Button>
+              <Button className="w-full" type="button" variant="outline" onClick={copyInviteMessage} disabled={left <= 0}><Copy className="size-4" /> Copy invite</Button>
             </div>
             {isOwner && (
-              <button type="button" className="mt-2 text-xs text-muted-foreground underline" onClick={resetLink}>
+              <Button type="button" variant="link" size="sm" className="mt-2 h-auto px-0 text-muted-foreground" onClick={resetLink}>
                 Reset link (old links stop working)
-              </button>
+              </Button>
             )}
           </div>
         </section>

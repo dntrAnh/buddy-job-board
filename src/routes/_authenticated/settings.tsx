@@ -16,8 +16,10 @@ export const Route = createFileRoute("/_authenticated/settings")({
       { property: "og:title", content: "Email settings — Crew Board" },
       { property: "og:description", content: "Choose which Crew Board emails you get and see their delivery status." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://buddy-job-board.lovable.app/settings" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://buddy-job-board.lovable.app/settings" }],
   }),
   component: Settings,
 });

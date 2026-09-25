@@ -8,7 +8,11 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Share job posts with your crew, get nudged to apply, and see your ATS match score." },
       { property: "og:title", content: "Crew Board — a private job board for your friends" },
       { property: "og:description", content: "Share job posts with your crew, get nudged to apply, and see your ATS match score." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://buddy-job-board.lovable.app/" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://buddy-job-board.lovable.app/" }],
   }),
   component: Index,
 });

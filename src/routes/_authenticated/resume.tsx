@@ -19,7 +19,11 @@ export const Route = createFileRoute("/_authenticated/resume")({
       { name: "description", content: "Edit your resume and re-grade your ATS match for every job." },
       { property: "og:title", content: "My resume — Crew Board" },
       { property: "og:description", content: "Edit your resume and re-grade your ATS match for every job." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://buddy-job-board.lovable.app/resume" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://buddy-job-board.lovable.app/resume" }],
   }),
   component: ResumePage,
 });
