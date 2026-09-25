@@ -128,19 +128,19 @@ function Board() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b-2 border-foreground bg-background/95 backdrop-blur">
-        <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-3 sm:flex sm:flex-wrap sm:gap-3 sm:px-4">
+        <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-3 sm:px-4 lg:grid-cols-[auto_minmax(12rem,16rem)_auto_minmax(0,1fr)_auto]">
           <Link to="/" className="min-w-0 truncate font-display text-xl font-bold">Crew Board</Link>
-          {profile && <div className="justify-self-end sm:order-none"><ReminderModePicker profile={profile} /></div>}
+          {profile && <div className="justify-self-end lg:col-start-5 lg:row-start-1"><ReminderModePicker profile={profile} /></div>}
           {groupsQ.data && groupsQ.data.length > 0 && (
             <Select value={groupId ?? ""} onValueChange={setGroupId}>
-              <SelectTrigger className="col-span-2 w-full sm:w-48"><SelectValue placeholder="Pick a group" /></SelectTrigger>
+              <SelectTrigger className="col-span-2 w-full lg:col-span-1 lg:col-start-2 lg:row-start-1"><SelectValue placeholder="Pick a group" /></SelectTrigger>
               <SelectContent>
                 {groupsQ.data.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
               </SelectContent>
             </Select>
           )}
-          <Button className="w-full sm:w-auto" variant="ghost" size="sm" onClick={newGroup}><Plus className="size-4" /> New group</Button>
-          <div className="col-span-2 grid grid-cols-2 gap-2 sm:ml-auto sm:flex sm:items-center">
+          <Button className="w-full lg:col-start-3 lg:row-start-1 lg:w-auto" variant="ghost" size="sm" onClick={newGroup}><Plus className="size-4" /> New group</Button>
+          <div className="col-span-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:col-span-5 lg:row-start-2 lg:justify-self-end">
             {groupId && <Link className="min-w-0" to="/groups/$groupId" params={{ groupId }}><Button className="w-full" variant="ghost" size="sm"><Users className="size-4" /> Manage</Button></Link>}
             <Link className="min-w-0" to="/settings"><Button className="w-full" variant="ghost" size="sm"><Mail className="size-4" /> Emails</Button></Link>
             <Link className="min-w-0" to="/resume"><Button className="w-full" variant="outline" size="sm">My resume</Button></Link>
