@@ -184,6 +184,42 @@ function Board() {
         )}
         {groupId && profile && <GroupView key={groupId} groupId={groupId} profile={profile} userId={user.id} />}
       </main>
+
+      <Dialog open={newGroupOpen} onOpenChange={setNewGroupOpen}>
+        <DialogContent className="w-[calc(100%-1.5rem)] max-w-md rounded-2xl border-2 border-foreground p-5 shadow-[var(--shadow-pop)] sm:p-6">
+          <DialogHeader>
+            <div className="flex items-center gap-3 text-left">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl border-2 border-foreground bg-primary text-primary-foreground shadow-[var(--shadow-pop)]">
+                <Users className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="font-display text-2xl leading-tight">Start a new crew</DialogTitle>
+                <DialogDescription className="text-sm">Name it, create it, then invite up to 14 friends.</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <form onSubmit={(e) => { e.preventDefault(); createGroup(); }} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="new-group-name">Group name</Label>
+              <Input id="new-group-name" autoFocus maxLength={40} placeholder="e.g. Design Job Hunters" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="h-11 rounded-xl border-2 border-foreground bg-card" />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <button type="button" className="inline-flex cursor-pointer items-center gap-1 font-semibold text-primary hover:underline" onClick={suggestGroupName}>
+                  <Sparkles className="size-3.5" /> Surprise me
+                </button>
+                <span>{newGroupName.length}/40</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border-2 border-foreground bg-accent px-3 py-2 text-sm">
+              <Users className="size-4 shrink-0" />
+              <span>Groups fit up to 15 people — pending invites count toward the cap.</span>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="outline" onClick={() => setNewGroupOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={!newGroupName.trim() || creatingGroup}>{creatingGroup ? "Creating…" : <><Plus className="size-4" /> Create group</>}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
