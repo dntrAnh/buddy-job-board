@@ -115,18 +115,21 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          invite_token: string
           name: string
         }
         Insert: {
           created_at?: string
           created_by: string
           id?: string
+          invite_token?: string
           name: string
         }
         Update: {
           created_at?: string
           created_by?: string
           id?: string
+          invite_token?: string
           name?: string
         }
         Relationships: []
@@ -301,6 +304,7 @@ export type Database = {
         Returns: boolean
       }
       job_group: { Args: { _job: string }; Returns: string }
+      join_by_token: { Args: { _token: string }; Returns: string }
       shares_group: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
