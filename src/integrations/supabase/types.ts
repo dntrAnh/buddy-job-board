@@ -293,6 +293,53 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_resumes: {
+        Row: {
+          company: string
+          created_at: string
+          id: string
+          job_id: string
+          resume: string
+          role: string
+          score_after: number | null
+          score_before: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          id?: string
+          job_id: string
+          resume?: string
+          role: string
+          score_after?: number | null
+          score_before?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          resume?: string
+          role?: string
+          score_after?: number | null
+          score_before?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_resumes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

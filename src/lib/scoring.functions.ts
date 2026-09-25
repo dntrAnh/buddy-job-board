@@ -16,12 +16,13 @@ export const scoreJob = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ jobId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const [{ data: job, error: jErr }, { data: profile }] = await Promise.all([
+    const [{ data: job, error: jErr }, { data: profile }, { data: savedResume }] = await Promise.all([
       supabase.from("jobs").select("id, company, role, description").eq("id", data.jobId).single(),
       supabase.from("profiles").select("resume").eq("id", userId).maybeSingle(),
+      supabase.from("saved_resumes").select("resume").eq("job_id", data.jobId).eq("user_id", userId).maybeSingle(),
     ]);
     if (jErr || !job) return { error: "Job not found" };
-    const resume = profile?.resume?.trim();
+    const resume = savedResume?.resume?.trim() || profile?.resume?.trim();
     if (!resume) return { error: "Add your resume first" };
 
     const key = process.env["LOVABLE_API_KEY"];

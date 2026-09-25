@@ -13,6 +13,6 @@
 
 - [x] Mobile compatibility for board and group management
 - [x] Remove email delivery from group management
-- [ ] Save Amelia’s real resume to her profile
-- [ ] Make score clicks show prioritized resume changes with estimated score impact
-- [ ] Save, list, edit, and delete job-specific resume versions by company and role
+- [x] Save Amelia’s real resume to her profile
+- [x] Make score clicks show prioritized resume changes with estimated score impact
+- [x] Save, list, edit, and delete job-specific resume versions by company and role
