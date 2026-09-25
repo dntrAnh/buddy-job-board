@@ -10,3 +10,6 @@
 - [x] AI resume bullet improvements per job
 - [x] Email: per-type opt-outs, weekly reminders, delivery status log
 - [x] Board filters & sorting (company, role, match, status, date)
+
+- [ ] Mobile compatibility for board and group management
+- [ ] Remove email delivery from group management
