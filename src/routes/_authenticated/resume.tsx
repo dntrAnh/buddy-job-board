@@ -155,6 +155,44 @@ function ResumePage() {
           </section>
         </div>
       </main>
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialogContent className="w-[calc(100%-1.5rem)] max-w-md rounded-2xl border-2 border-foreground p-5 shadow-[var(--shadow-pop)] sm:p-6">
+          <div className="flex items-start gap-3 text-left">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl border-2 border-foreground bg-destructive text-destructive-foreground shadow-[var(--shadow-pop)]">
+              <Trash2 className="size-5" />
+            </span>
+            <AlertDialogHeader className="space-y-1">
+              <AlertDialogTitle className="font-display text-xl leading-tight">Delete this saved resume?</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2 text-sm">
+                  {pendingDelete && (
+                    <p className="rounded-lg border-2 border-foreground bg-accent px-3 py-1.5 font-display font-bold text-foreground">
+                      {pendingDelete.role} · {pendingDelete.company}
+                    </p>
+                  )}
+                  <p>
+                    {pendingDelete?.score_before !== null && pendingDelete?.score_after !== null && (
+                      <>This was the {pendingDelete.score_before}% → {pendingDelete.score_after}% version. </>
+                    )}
+                    Your primary resume stays untouched, and you can save a new version for this job anytime.
+                  </p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel className="cursor-pointer rounded-lg">Keep it</AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: "destructive" })}
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); if (pendingDelete) removeSavedVersion(pendingDelete.id); }}
+            >
+              <Trash2 className="size-4" /> {deleting ? "Deleting…" : "Delete resume"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
