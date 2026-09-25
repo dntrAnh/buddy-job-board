@@ -8,7 +8,7 @@ import { notifyInvite, removeMember } from "@/lib/notify.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Crown, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Copy, Crown, Trash2, UserPlus, X } from "lucide-react";
 import { DeliveryList, type EmailEvent } from "@/components/DeliveryList";
 
 const CAP = 15;
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
 
 async function loadGroup(groupId: string) {
   const [g, m, inv, ev] = await Promise.all([
-    supabase.from("groups").select("id, name, created_by").eq("id", groupId).single(),
+    supabase.from("groups").select("id, name, created_by, invite_token").eq("id", groupId).single(),
     supabase.from("group_members").select("user_id, joined_at").eq("group_id", groupId),
     supabase.from("invites").select("id, email, created_at").eq("group_id", groupId).eq("accepted", false),
     supabase.from("email_events").select("*").eq("group_id", groupId).order("created_at", { ascending: false }).limit(50),
@@ -59,6 +59,18 @@ function ManageGroup() {
   const left = CAP - used;
   const name = (id: string) => profiles.find((p) => p.id === id);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["manage", groupId] }); qc.invalidateQueries({ queryKey: ["group", groupId] }); };
+  const inviteUrl = `${window.location.origin}/join/${group.invite_token}`;
+  async function copyLink() {
+    await navigator.clipboard.writeText(inviteUrl);
+    toast.success("Link copied — send it to your friend!");
+  }
+  async function resetLink() {
+    if (!confirm("Reset the link? Anyone with the old link won't be able to join.")) return;
+    const { error } = await supabase.from("groups").update({ invite_token: crypto.randomUUID() }).eq("id", groupId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("New link ready.");
+    refresh();
+  }
 
   async function invite(e: React.FormEvent) {
     e.preventDefault();
@@ -103,6 +115,19 @@ function ManageGroup() {
             <Button disabled={left <= 0}><UserPlus className="size-4" /> Invite</Button>
           </form>
           {left <= 0 && <p className="mt-2 text-sm text-destructive">Remove a member or cancel an invite to free a seat.</p>}
+          <div className="mt-5 border-t border-border pt-4">
+            <div className="mb-1 font-semibold">Or share an invite link</div>
+            <p className="mb-2 text-sm text-muted-foreground">Anyone with this link can join while there are seats left.</p>
+            <div className="flex gap-2">
+              <Input readOnly value={inviteUrl} onFocus={(e) => e.currentTarget.select()} />
+              <Button type="button" onClick={copyLink} disabled={left <= 0}><Copy className="size-4" /> Copy</Button>
+            </div>
+            {isOwner && (
+              <button type="button" className="mt-2 text-xs text-muted-foreground underline" onClick={resetLink}>
+                Reset link (old links stop working)
+              </button>
+            )}
+          </div>
         </section>
 
         <section className="rounded-2xl border-2 border-foreground bg-card p-5">

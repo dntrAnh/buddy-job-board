@@ -91,8 +91,22 @@ function Board() {
     if (!groupId || !gs.find((g) => g.id === groupId)) setGroupId(gs[0]?.id ?? null);
   }, [groupsQ.data, groupId]);
 
+  useEffect(() => {
+    const token = localStorage.getItem("crew-pending-join");
+    if (!token) return;
+    localStorage.removeItem("crew-pending-join");
+    (async () => {
+      const { data, error } = await supabase.rpc("join_by_token", { _token: token });
+      if (error) { toast.error(error.message); return; }
+      await qc.invalidateQueries();
+      setGroupId(data as string);
+      toast.success("You joined the group!");
+    })();
+  }, [qc]);
+
   const profile = profileQ.data;
   if (profile && !profile.onboarded) return <Onboarding profile={profile} />;
+
 
   async function acceptInvite(id: string) {
     const { data, error } = await supabase.rpc("accept_invite", { _invite: id });

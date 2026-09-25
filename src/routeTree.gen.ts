@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedBoardRouteImport } from './routes/_authenticated/board'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as AuthenticatedGroupsGroupIdRouteImport } from './routes/_authenticated/groups.$groupId'
 import { Route as ApiPublicHooksJobDigestRouteImport } from './routes/api/public/hooks/job-digest'
 import { Route as ApiPublicHooksWeeklyReminderRouteImport } from './routes/api/public/hooks/weekly-reminder'
@@ -50,6 +51,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedGroupsGroupIdRoute =
   AuthenticatedGroupsGroupIdRouteImport.update({
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/board': typeof AuthenticatedBoardRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/join/$token': typeof JoinTokenRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/board': typeof AuthenticatedBoardRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/join/$token': typeof JoinTokenRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/_authenticated/board': typeof AuthenticatedBoardRoute
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/join/$token': typeof JoinTokenRoute
   '/_authenticated/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/api/public/hooks/job-digest': typeof ApiPublicHooksJobDigestRoute
   '/api/public/hooks/weekly-reminder': typeof ApiPublicHooksWeeklyReminderRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/board'
     | '/resume'
     | '/settings'
+    | '/join/$token'
     | '/groups/$groupId'
     | '/api/public/hooks/job-digest'
     | '/api/public/hooks/weekly-reminder'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/board'
     | '/resume'
     | '/settings'
+    | '/join/$token'
     | '/groups/$groupId'
     | '/api/public/hooks/job-digest'
     | '/api/public/hooks/weekly-reminder'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/_authenticated/board'
     | '/_authenticated/resume'
     | '/_authenticated/settings'
+    | '/join/$token'
     | '/_authenticated/groups/$groupId'
     | '/api/public/hooks/job-digest'
     | '/api/public/hooks/weekly-reminder'
@@ -173,6 +185,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  JoinTokenRoute: typeof JoinTokenRoute
   ApiPublicHooksJobDigestRoute: typeof ApiPublicHooksJobDigestRoute
   ApiPublicHooksWeeklyReminderRoute: typeof ApiPublicHooksWeeklyReminderRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -223,6 +236,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/groups/$groupId': {
       id: '/_authenticated/groups/$groupId'
@@ -290,6 +310,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  JoinTokenRoute: JoinTokenRoute,
   ApiPublicHooksJobDigestRoute: ApiPublicHooksJobDigestRoute,
   ApiPublicHooksWeeklyReminderRoute: ApiPublicHooksWeeklyReminderRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
