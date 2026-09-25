@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalLink, RefreshCw, Plus, UserPlus, Check, SkipForward, Undo2, Bell, Users, Mail, Sparkles, Copy } from "lucide-react";
@@ -89,6 +89,9 @@ function Board() {
   const groupsQ = useQuery({ queryKey: ["groups", user.id], queryFn: () => fetchGroups(user.id) });
   const invitesQ = useQuery({ queryKey: ["myInvites", email], queryFn: () => fetchPendingInvites(email) });
   const [groupId, setGroupId] = useState<string | null>(null);
+  const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [creatingGroup, setCreatingGroup] = useState(false);
 
   useEffect(() => {
     const gs = groupsQ.data;
@@ -121,13 +124,24 @@ function Board() {
     toast.success("You joined the group!");
   }
 
-  async function newGroup() {
-    const name = prompt("Group name?");
-    if (!name?.trim()) return;
-    const { data, error } = await supabase.from("groups").insert({ name: name.trim(), created_by: user.id }).select("id").single();
+  function suggestGroupName() {
+    const names = ["Dream Job Crew", "The Offer Hunters", "Apply Together", "Hired Squad", "The Job Hunt Club", "Next Chapter Crew"];
+    const pick = names.find((n) => n !== newGroupName.trim()) ?? names[0]!;
+    setNewGroupName(pick);
+  }
+
+  async function createGroup() {
+    const name = newGroupName.trim();
+    if (!name) return;
+    setCreatingGroup(true);
+    const { data, error } = await supabase.from("groups").insert({ name, created_by: user.id }).select("id").single();
+    setCreatingGroup(false);
     if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["groups"] });
     setGroupId(data.id);
+    setNewGroupOpen(false);
+    setNewGroupName("");
+    toast.success(`"${name}" is live — invite your crew!`);
   }
 
   return (
@@ -144,7 +158,7 @@ function Board() {
               </SelectContent>
             </Select>
           )}
-          <Button className="w-full lg:col-start-3 lg:row-start-1 lg:w-auto" variant="ghost" size="sm" onClick={newGroup}><Plus className="size-4" /> New group</Button>
+          <Button className="w-full lg:col-start-3 lg:row-start-1 lg:w-auto" variant="ghost" size="sm" onClick={() => setNewGroupOpen(true)}><Plus className="size-4" /> New group</Button>
           <div className="col-span-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:col-span-5 lg:row-start-2 lg:justify-self-end">
             {groupId && <Link className="min-w-0" to="/groups/$groupId" params={{ groupId }}><Button className="w-full" variant="ghost" size="sm"><Users className="size-4" /> Manage</Button></Link>}
             <Link className="min-w-0" to="/settings"><Button className="w-full" variant="ghost" size="sm"><Mail className="size-4" /> Emails</Button></Link>
@@ -165,11 +179,47 @@ function Board() {
           <div className="rounded-2xl border-2 border-dashed border-foreground p-10 text-center">
             <h2 className="font-display text-2xl font-bold">No group yet</h2>
             <p className="mt-2 text-muted-foreground">Create one and invite up to 14 friends, or accept an invite above.</p>
-            <Button className="mt-4" onClick={newGroup}>Create a group</Button>
+            <Button className="mt-4" onClick={() => setNewGroupOpen(true)}>Create a group</Button>
           </div>
         )}
         {groupId && profile && <GroupView key={groupId} groupId={groupId} profile={profile} userId={user.id} />}
       </main>
+
+      <Dialog open={newGroupOpen} onOpenChange={setNewGroupOpen}>
+        <DialogContent className="w-[calc(100%-1.5rem)] max-w-md rounded-2xl border-2 border-foreground p-5 shadow-[var(--shadow-pop)] sm:p-6">
+          <DialogHeader>
+            <div className="flex items-center gap-3 text-left">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl border-2 border-foreground bg-primary text-primary-foreground shadow-[var(--shadow-pop)]">
+                <Users className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="font-display text-2xl leading-tight">Start a new crew</DialogTitle>
+                <DialogDescription className="text-sm">Name it, create it, then invite up to 14 friends.</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <form onSubmit={(e) => { e.preventDefault(); createGroup(); }} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="new-group-name">Group name</Label>
+              <Input id="new-group-name" autoFocus maxLength={40} placeholder="e.g. Design Job Hunters" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="h-11 rounded-xl border-2 border-foreground bg-card" />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <button type="button" className="inline-flex cursor-pointer items-center gap-1 font-semibold text-primary hover:underline" onClick={suggestGroupName}>
+                  <Sparkles className="size-3.5" /> Surprise me
+                </button>
+                <span>{newGroupName.length}/40</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border-2 border-foreground bg-accent px-3 py-2 text-sm">
+              <Users className="size-4 shrink-0" />
+              <span>Groups fit up to 15 people — pending invites count toward the cap.</span>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="outline" onClick={() => setNewGroupOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={!newGroupName.trim() || creatingGroup}>{creatingGroup ? "Creating…" : <><Plus className="size-4" /> Create group</>}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

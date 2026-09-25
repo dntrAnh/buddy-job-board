@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, fetchGroups, type SavedResume } from "@/lib/data";
 import { scoreJob } from "@/lib/scoring.functions";
 import { deleteResumeVersion, updateResumeVersion } from "@/lib/resumes.functions";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,8 @@ function ResumePage() {
   const [resume, setResume] = useState("");
   const [name, setName] = useState("");
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<SavedResume | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const score = useServerFn(scoreJob);
   const updateSaved = useServerFn(updateResumeVersion);
   const deleteSaved = useServerFn(deleteResumeVersion);
@@ -89,11 +92,14 @@ function ResumePage() {
   }
 
   async function removeSavedVersion(id: string) {
-    if (!window.confirm("Delete this saved resume version?")) return;
+    if (!pendingDelete) return;
+    setDeleting(true);
     const r = await deleteSaved({ data: { id } });
+    setDeleting(false);
     if ("error" in r && r.error) { toast.error(r.error); return; }
     await qc.invalidateQueries({ queryKey: ["saved-resumes", user.id] });
     await qc.invalidateQueries({ queryKey: ["group"] });
+    setPendingDelete(null);
     toast.success("Resume version deleted");
   }
 
@@ -143,17 +149,55 @@ function ResumePage() {
               {savedQ.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
               {!savedQ.isLoading && (savedQ.data ?? []).length === 0 && <p className="rounded-xl border-2 border-dashed border-foreground p-4 text-sm text-muted-foreground">No job-specific resumes saved yet.</p>}
               {(savedQ.data ?? []).map((saved) => (
-                <SavedResumeRow key={saved.id} saved={saved} onSave={saveSavedVersion} onDelete={removeSavedVersion} />
+                <SavedResumeRow key={saved.id} saved={saved} onSave={saveSavedVersion} onRequestDelete={() => setPendingDelete(saved)} />
               ))}
             </div>
           </section>
         </div>
       </main>
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialogContent className="w-[calc(100%-1.5rem)] max-w-md rounded-2xl border-2 border-foreground p-5 shadow-[var(--shadow-pop)] sm:p-6">
+          <div className="flex items-start gap-3 text-left">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl border-2 border-foreground bg-destructive text-destructive-foreground shadow-[var(--shadow-pop)]">
+              <Trash2 className="size-5" />
+            </span>
+            <AlertDialogHeader className="space-y-1">
+              <AlertDialogTitle className="font-display text-xl leading-tight">Delete this saved resume?</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2 text-sm">
+                  {pendingDelete && (
+                    <p className="rounded-lg border-2 border-foreground bg-accent px-3 py-1.5 font-display font-bold text-foreground">
+                      {pendingDelete.role} · {pendingDelete.company}
+                    </p>
+                  )}
+                  <p>
+                    {pendingDelete != null && pendingDelete.score_before !== null && pendingDelete.score_after !== null && (
+                      <>This was the {pendingDelete.score_before}% → {pendingDelete.score_after}% version. </>
+                    )}
+                    Your primary resume stays untouched, and you can save a new version for this job anytime.
+                  </p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel className="cursor-pointer rounded-lg">Keep it</AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: "destructive" })}
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); if (pendingDelete) removeSavedVersion(pendingDelete.id); }}
+            >
+              <Trash2 className="size-4" /> {deleting ? "Deleting…" : "Delete resume"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function SavedResumeRow({ saved, onSave, onDelete }: { saved: SavedResume; onSave: (id: string, resume: string) => Promise<void>; onDelete: (id: string) => Promise<void> }) {
+function SavedResumeRow({ saved, onSave, onRequestDelete }: { saved: SavedResume; onSave: (id: string, resume: string) => Promise<void>; onRequestDelete: () => void }) {
   const [draft, setDraft] = useState(saved.resume);
   const [busy, setBusy] = useState(false);
 
@@ -165,10 +209,9 @@ function SavedResumeRow({ saved, onSave, onDelete }: { saved: SavedResume; onSav
     setBusy(false);
   }
 
-  async function remove() {
-    setBusy(true);
-    await onDelete(saved.id);
-    setBusy(false);
+  function remove() {
+    if (busy) return;
+    onRequestDelete();
   }
 
   return (
