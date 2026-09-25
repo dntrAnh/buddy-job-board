@@ -352,7 +352,7 @@ function Column({ title, children }: { title: string; children: React.ReactNode 
   );
 }
 
-export function ScoreBadge({ score, scoring, onClick }: { score?: Score | undefined; scoring?: boolean | undefined; onClick?: () => void }) {
+export function ScoreBadge({ score, scoring, onClick }: { score?: Score | undefined; scoring?: boolean | undefined; onClick?: (() => void) | undefined }) {
   if (scoring) return <span className="rounded-lg border-2 border-foreground px-2 py-1 text-xs font-bold">Scoring…</span>;
   if (!score) return <span className="rounded-lg border-2 border-dashed border-muted-foreground px-2 py-1 text-xs text-muted-foreground">No score</span>;
   const tone = score.score >= 75 ? "bg-success text-success-foreground" : score.score >= 50 ? "bg-accent text-accent-foreground" : "bg-destructive text-destructive-foreground";
@@ -435,7 +435,7 @@ function BulletImprover({ jobId, score, savedResume, autoRun, onSaved }: { jobId
     const r = await run({ data: { jobId, resume: custom.trim() || null } });
     setBusy(false);
     if ("error" in r && r.error) { toast.error(r.error); return; }
-    if ("bullets" in r) setResult(r);
+    if ("ok" in r && r.ok) setResult(r);
   }
   async function saveTailored() {
     if (!result?.tailoredResume.trim()) return;
