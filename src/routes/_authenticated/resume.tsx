@@ -46,6 +46,8 @@ function ResumePage() {
   const [resume, setResume] = useState("");
   const [name, setName] = useState("");
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<SavedResume | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const score = useServerFn(scoreJob);
   const updateSaved = useServerFn(updateResumeVersion);
   const deleteSaved = useServerFn(deleteResumeVersion);
