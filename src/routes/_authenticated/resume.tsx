@@ -197,7 +197,7 @@ function ResumePage() {
   );
 }
 
-function SavedResumeRow({ saved, onSave, onDelete }: { saved: SavedResume; onSave: (id: string, resume: string) => Promise<void>; onDelete: (id: string) => Promise<void> }) {
+function SavedResumeRow({ saved, onSave, onRequestDelete }: { saved: SavedResume; onSave: (id: string, resume: string) => Promise<void>; onRequestDelete: () => void }) {
   const [draft, setDraft] = useState(saved.resume);
   const [busy, setBusy] = useState(false);
 
