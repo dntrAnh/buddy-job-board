@@ -24,10 +24,10 @@ const DEFAULT_FILTERS: Filters = { q: "", status: "all", minMatch: 0, sort: "new
 
 function FilterBar({ f, setF }: { f: Filters; setF: (f: Filters) => void }) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border-2 border-foreground bg-card p-3">
-      <Input className="w-56" placeholder="Search company or role…" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} />
+    <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl border-2 border-foreground bg-card p-3 sm:flex sm:flex-wrap sm:items-center">
+      <Input className="col-span-2 w-full sm:w-56" placeholder="Search company or role…" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} />
       <Select value={f.status} onValueChange={(v) => setF({ ...f, status: v as Filters["status"] })}>
-        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Any status</SelectItem>
           <SelectItem value="todo">To apply</SelectItem>
@@ -36,7 +36,7 @@ function FilterBar({ f, setF }: { f: Filters; setF: (f: Filters) => void }) {
         </SelectContent>
       </Select>
       <Select value={String(f.minMatch)} onValueChange={(v) => setF({ ...f, minMatch: Number(v) })}>
-        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value="0">Any match</SelectItem>
           <SelectItem value="50">50%+ match</SelectItem>
@@ -45,7 +45,7 @@ function FilterBar({ f, setF }: { f: Filters; setF: (f: Filters) => void }) {
         </SelectContent>
       </Select>
       <Select value={f.sort} onValueChange={(v) => setF({ ...f, sort: v as Filters["sort"] })}>
-        <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="col-span-2 w-full sm:w-44"><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem value="newest">Newest posted</SelectItem>
           <SelectItem value="oldest">Oldest posted</SelectItem>
@@ -56,7 +56,7 @@ function FilterBar({ f, setF }: { f: Filters; setF: (f: Filters) => void }) {
         </SelectContent>
       </Select>
       {JSON.stringify(f) !== JSON.stringify(DEFAULT_FILTERS) && (
-        <Button size="sm" variant="ghost" onClick={() => setF(DEFAULT_FILTERS)}>Reset</Button>
+        <Button className="col-span-2 sm:w-auto" size="sm" variant="ghost" onClick={() => setF(DEFAULT_FILTERS)}>Reset</Button>
       )}
     </div>
   );
@@ -128,30 +128,30 @@ function Board() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b-2 border-foreground bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
-          <Link to="/" className="font-display text-xl font-bold">Crew Board</Link>
+        <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-3 sm:flex sm:flex-wrap sm:gap-3 sm:px-4">
+          <Link to="/" className="min-w-0 truncate font-display text-xl font-bold">Crew Board</Link>
+          {profile && <div className="justify-self-end sm:order-none"><ReminderModePicker profile={profile} /></div>}
           {groupsQ.data && groupsQ.data.length > 0 && (
             <Select value={groupId ?? ""} onValueChange={setGroupId}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="Pick a group" /></SelectTrigger>
+              <SelectTrigger className="col-span-2 w-full sm:w-48"><SelectValue placeholder="Pick a group" /></SelectTrigger>
               <SelectContent>
                 {groupsQ.data.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
               </SelectContent>
             </Select>
           )}
-          <Button variant="ghost" size="sm" onClick={newGroup}><Plus className="size-4" /> New group</Button>
-          <div className="ml-auto flex items-center gap-2">
-            {profile && <ReminderModePicker profile={profile} />}
-            {groupId && <Link to="/groups/$groupId" params={{ groupId }}><Button variant="ghost" size="sm"><Users className="size-4" /> Manage group</Button></Link>}
-            <Link to="/settings"><Button variant="ghost" size="sm"><Mail className="size-4" /> Emails</Button></Link>
-            <Link to="/resume"><Button variant="outline" size="sm">My resume</Button></Link>
-            <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>Sign out</Button>
+          <Button className="w-full sm:w-auto" variant="ghost" size="sm" onClick={newGroup}><Plus className="size-4" /> New group</Button>
+          <div className="col-span-2 grid grid-cols-2 gap-2 sm:ml-auto sm:flex sm:items-center">
+            {groupId && <Link className="min-w-0" to="/groups/$groupId" params={{ groupId }}><Button className="w-full" variant="ghost" size="sm"><Users className="size-4" /> Manage</Button></Link>}
+            <Link className="min-w-0" to="/settings"><Button className="w-full" variant="ghost" size="sm"><Mail className="size-4" /> Emails</Button></Link>
+            <Link className="min-w-0" to="/resume"><Button className="w-full" variant="outline" size="sm">My resume</Button></Link>
+            <Button className="w-full" variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>Sign out</Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-6">
         {(invitesQ.data ?? []).map((inv) => (
-          <div key={inv.id} className="mb-4 flex items-center justify-between rounded-xl border-2 border-foreground bg-accent p-4">
+          <div key={inv.id} className="mb-4 grid gap-3 rounded-xl border-2 border-foreground bg-accent p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <span className="font-medium">You've been invited to join a group.</span>
             <Button size="sm" onClick={() => acceptInvite(inv.id)}>Accept</Button>
           </div>
@@ -257,21 +257,21 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <Button onClick={() => setPosting(true)}><Plus className="size-4" /> Post a job</Button>
-        <Button variant="outline" onClick={() => setInviting(true)} disabled={seats >= 15}>
+      <div className="mb-5 grid grid-cols-2 gap-2 sm:mb-6 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+        <Button className="w-full sm:w-auto" onClick={() => setPosting(true)}><Plus className="size-4" /> Post a job</Button>
+        <Button className="w-full sm:w-auto" variant="outline" onClick={() => setInviting(true)} disabled={seats >= 15}>
           <UserPlus className="size-4" /> Invite ({seats}/15)
         </Button>
         {!profile.resume.trim() && (
-          <Link to="/resume" className="text-sm underline">Add your resume to get match scores →</Link>
+          <Link to="/resume" className="col-span-2 text-sm underline">Add your resume to get match scores →</Link>
         )}
       </div>
 
       <FilterBar f={filters} setF={setFilters} />
       <Tabs defaultValue="mine">
-        <TabsList>
-          <TabsTrigger value="mine">My board</TabsTrigger>
-          <TabsTrigger value="group">Group board</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:flex sm:w-auto">
+          <TabsTrigger className="min-w-0" value="mine">My board</TabsTrigger>
+          <TabsTrigger className="min-w-0" value="group">Group board</TabsTrigger>
         </TabsList>
         <TabsContent value="mine" className="mt-4">
           <div className="grid gap-6 md:grid-cols-2">
@@ -289,10 +289,10 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
               const who = appliedBy(j.id);
               const mine = myStatus(j.id);
               return (
-                <div key={j.id} className="flex flex-wrap items-center gap-4 rounded-xl border-2 border-foreground bg-card p-4">
-                  <button className="min-w-0 flex-1 text-left" onClick={() => setOpenJob(j)}>
-                    <div className="font-display text-lg font-bold">{j.role}</div>
-                    <div className="text-sm text-muted-foreground">{j.company} · posted by {names.get(j.posted_by) ?? "someone"}</div>
+                <div key={j.id} className="grid gap-3 rounded-xl border-2 border-foreground bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-4">
+                  <button className="min-w-0 text-left" onClick={() => setOpenJob(j)}>
+                    <div className="break-words font-display text-lg font-bold">{j.role}</div>
+                    <div className="break-words text-sm text-muted-foreground">{j.company} · posted by {names.get(j.posted_by) ?? "someone"}</div>
                   </button>
                   <div className="flex flex-wrap gap-1.5">
                     {who.length === 0 && <span className="text-sm text-muted-foreground">No one yet</span>}
@@ -351,19 +351,19 @@ function JobCard(props: {
   const { job, status } = props;
   return (
     <div className="rounded-xl border-2 border-foreground bg-card p-4 shadow-[var(--shadow-pop)]">
-      <div className="flex items-start justify-between gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <button onClick={props.onOpen} className="min-w-0 text-left">
-          <div className="font-display text-lg font-bold leading-tight">{job.role}</div>
-          <div className="text-sm text-muted-foreground">{job.company}</div>
+          <div className="break-words font-display text-lg font-bold leading-tight">{job.role}</div>
+          <div className="break-words text-sm text-muted-foreground">{job.company}</div>
         </button>
         <ScoreBadge score={props.score} scoring={props.scoring} />
       </div>
       {props.appliedNames.length > 0 && (
         <p className="mt-2 text-sm"><span className="font-semibold">Applied:</span> {props.appliedNames.join(", ")}</p>
       )}
-      <div className="mt-3 flex flex-wrap gap-2">
-        {!status && <Button size="sm" onClick={() => props.onStatus("applied")}><Check className="size-4" /> I applied</Button>}
-        {!status && <Button size="sm" variant="ghost" onClick={() => props.onStatus("skipped")}><SkipForward className="size-4" /> Skip</Button>}
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        {!status && <Button className="w-full sm:w-auto" size="sm" onClick={() => props.onStatus("applied")}><Check className="size-4" /> I applied</Button>}
+        {!status && <Button className="w-full sm:w-auto" size="sm" variant="ghost" onClick={() => props.onStatus("skipped")}><SkipForward className="size-4" /> Skip</Button>}
         {status && <Button size="sm" variant="ghost" onClick={() => props.onStatus(null)}><Undo2 className="size-4" /> Undo</Button>}
         {props.hasResume && (
           <Button size="sm" variant="outline" onClick={props.onRegrade} disabled={props.scoring}>
@@ -381,7 +381,7 @@ function JobCard(props: {
 function JobDialog({ job, onClose, score, scoring, onRegrade }: { job: Job | null; onClose: () => void; score?: Score | undefined; scoring: boolean; onRegrade: () => void }) {
   return (
     <Dialog open={!!job} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
         {job && (
           <>
             <DialogHeader>
@@ -415,11 +415,11 @@ function BulletImprover({ jobId }: { jobId: string }) {
   }
   return (
     <div className="rounded-xl border-2 border-foreground p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <span className="font-semibold">ATS bullet improvements</span>
-        <div className="flex gap-2">
-          <Button size="sm" variant="ghost" onClick={() => setShowCustom((s) => !s)}>{showCustom ? "Use my saved resume" : "Paste a different resume"}</Button>
-          <Button size="sm" onClick={go} disabled={busy}><Sparkles className={`size-4 ${busy ? "animate-pulse" : ""}`} /> {busy ? "Writing…" : tips ? "Regenerate" : "Improve my bullets"}</Button>
+        <div className="grid gap-2 sm:flex">
+          <Button className="w-full sm:w-auto" size="sm" variant="ghost" onClick={() => setShowCustom((s) => !s)}>{showCustom ? "Use my saved resume" : "Paste a different resume"}</Button>
+          <Button className="w-full sm:w-auto" size="sm" onClick={go} disabled={busy}><Sparkles className={`size-4 ${busy ? "animate-pulse" : ""}`} /> {busy ? "Writing…" : tips ? "Regenerate" : "Improve my bullets"}</Button>
         </div>
       </div>
       {showCustom && <Textarea className="mt-3" rows={5} placeholder="Paste the resume to tailor for this job…" value={custom} onChange={(e) => setCustom(e.target.value)} />}
@@ -447,7 +447,7 @@ function BulletImprover({ jobId }: { jobId: string }) {
 export function ScoreDetails({ score, scoring, onRegrade }: { score?: Score | undefined; scoring: boolean; onRegrade: () => void }) {
   return (
     <div className="rounded-xl border-2 border-foreground p-4">
-      <div className="flex items-center justify-between">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
         <div className="flex items-center gap-3">
           <ScoreBadge score={score} scoring={scoring} />
           <span className="font-semibold">ATS match</span>
@@ -531,12 +531,12 @@ function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean;
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader><DialogTitle className="font-display text-2xl">Post a job</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div className="space-y-1">
             <Label>Job link</Label>
-            <div className="flex gap-2">
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
               <Input type="url" placeholder="Paste the job link — we'll fill in the rest" value={f.link} onChange={set("link")}
                 onPaste={(e) => { const t = e.clipboardData.getData("text"); setTimeout(() => fetchFromLink(t), 0); }} />
               <Button type="button" variant="outline" disabled={fetching || !f.link} onClick={() => fetchFromLink(f.link)}>
@@ -545,7 +545,7 @@ function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean;
             </div>
             {fetching && <p className="text-xs text-muted-foreground">Reading the job post… this takes a few seconds.</p>}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1"><Label>Company</Label><Input required value={f.company} onChange={set("company")} /></div>
             <div className="space-y-1"><Label>Role</Label><Input required value={f.role} onChange={set("role")} /></div>
           </div>
@@ -591,9 +591,9 @@ function InviteDialog({ open, onOpenChange, groupId, userId, pending }: { open: 
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+       <DialogContent className="w-[calc(100%-1.5rem)] p-4 sm:p-6">
         <DialogHeader><DialogTitle className="font-display text-2xl">Invite a friend</DialogTitle></DialogHeader>
-        <form onSubmit={submit} className="flex gap-2">
+         <form onSubmit={submit} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
           <Input type="email" required placeholder="friend@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Button>Invite</Button>
         </form>
@@ -601,8 +601,8 @@ function InviteDialog({ open, onOpenChange, groupId, userId, pending }: { open: 
           <div className="space-y-1">
             <div className="text-xs font-bold uppercase text-muted-foreground">Pending</div>
             {pending.map((p) => (
-              <div key={p.id} className="flex items-center justify-between text-sm">
-                <span>{p.email}</span>
+               <div key={p.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-sm">
+                 <span className="truncate">{p.email}</span>
                 <button className="text-muted-foreground underline" onClick={() => revoke(p.id)}>Remove</button>
               </div>
             ))}
@@ -626,8 +626,8 @@ function Onboarding({ profile }: { profile: Profile }) {
   }
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
-      <div className="w-full max-w-xl space-y-5 rounded-2xl border-2 border-foreground bg-card p-8 shadow-[var(--shadow-pop)]">
-        <h1 className="font-display text-3xl font-bold">Set up your profile</h1>
+      <div className="w-full max-w-xl space-y-5 rounded-xl border-2 border-foreground bg-card p-4 shadow-[var(--shadow-pop)] sm:p-8">
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">Set up your profile</h1>
         <div className="space-y-1"><Label>Your name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div className="space-y-1"><Label>Your resume (paste text)</Label><Textarea rows={8} value={resume} onChange={(e) => setResume(e.target.value)} placeholder="Paste your primary resume — used for ATS match scores." /></div>
         <div className="space-y-2">

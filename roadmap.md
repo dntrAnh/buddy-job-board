@@ -11,5 +11,5 @@
 - [x] Email: per-type opt-outs, weekly reminders, delivery status log
 - [x] Board filters & sorting (company, role, match, status, date)
 
-- [ ] Mobile compatibility for board and group management
-- [ ] Remove email delivery from group management
+- [x] Mobile compatibility for board and group management
+- [x] Remove email delivery from group management
