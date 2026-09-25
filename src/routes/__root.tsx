@@ -81,6 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Crew Board" },
       { name: "description", content: "A private job board for your crew." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Crew Board" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [

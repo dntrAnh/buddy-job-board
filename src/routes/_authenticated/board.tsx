@@ -69,7 +69,11 @@ export const Route = createFileRoute("/_authenticated/board")({
       { name: "description", content: "Jobs to apply to, your match scores, and who in your crew applied." },
       { property: "og:title", content: "Your board — Crew Board" },
       { property: "og:description", content: "Jobs to apply to, your match scores, and who in your crew applied." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://buddy-job-board.lovable.app/board" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://buddy-job-board.lovable.app/board" }],
   }),
   component: Board,
 });

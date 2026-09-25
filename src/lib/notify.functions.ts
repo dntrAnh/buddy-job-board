@@ -83,13 +83,14 @@ export const notifyInvite = createServerFn({ method: "POST" })
     const { data: inv } = await supabase.from("invites").select("id, email, group_id, invited_by, accepted").eq("id", data.id).single();
     if (!inv || inv.invited_by !== userId || inv.accepted) return { ok: false };
     const [{ data: group }, { data: me }] = await Promise.all([
-      supabase.from("groups").select("name").eq("id", inv.group_id).single(),
+      supabase.from("groups").select("name, invite_token").eq("id", inv.group_id).single(),
       supabase.from("profiles").select("display_name").eq("id", userId).single(),
     ]);
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const signupUrl = group?.invite_token ? `${appOrigin()}/join/${group.invite_token}` : `${appOrigin()}/auth`;
     try {
       await sendTemplateEmail("group-invite", inv.email, {
-        templateData: { inviterName: me?.display_name || "A friend", groupName: group?.name, signupUrl: `${appOrigin()}/auth` },
+        templateData: { inviterName: me?.display_name || "A friend", groupName: group?.name, signupUrl },
         idempotencyKey: `group-invite-${inv.id}`,
       });
     } catch (e) { console.error("invite email failed", e); return { ok: false }; }

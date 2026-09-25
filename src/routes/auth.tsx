@@ -14,7 +14,11 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in to your private crew job board." },
       { property: "og:title", content: "Sign in — Crew Board" },
       { property: "og:description", content: "Sign in to your private crew job board." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://buddy-job-board.lovable.app/auth" },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://buddy-job-board.lovable.app/auth" }],
   }),
   component: AuthPage,
 });
