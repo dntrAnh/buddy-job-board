@@ -484,8 +484,22 @@ function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean;
   const notifyJob = useServerFn(notifyNewJob);
   const [f, setF] = useState({ company: "", role: "", description: "", link: "", notes: "" });
   const [busy, setBusy] = useState(false);
+  const [allowDup, setAllowDup] = useState(false);
+  const { data: existing = [] } = useQuery({
+    queryKey: ["group-jobs-dup", groupId],
+    enabled: open,
+    queryFn: async () => (await supabase.from("jobs").select("id, company, role, link, posted_by, created_at").eq("group_id", groupId)).data ?? [],
+  });
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normLink = (s: string) => { try { const u = new URL(s.trim()); return (u.hostname.replace(/^www\./, "") + u.pathname.replace(/\/+$/, "")).toLowerCase(); } catch { return ""; } };
+  const dups = existing.filter((j) => {
+    const l = normLink(f.link);
+    if (l && j.link && normLink(j.link) === l) return true;
+    return !!f.company.trim() && !!f.role.trim() && norm(j.company) === norm(f.company) && norm(j.role) === norm(f.role);
+  });
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (dups.length && !allowDup) { toast.error("This job looks already posted — check below."); return; }
     setBusy(true);
     const { data: created, error } = await supabase.from("jobs").insert({
       group_id: groupId, posted_by: userId, company: f.company.trim(), role: f.role.trim(),
@@ -496,8 +510,10 @@ function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean;
     notifyJob({ data: { id: created.id } }).catch(() => {});
     toast.success("Job posted to the group!");
     setF({ company: "", role: "", description: "", link: "", notes: "" });
+    setAllowDup(false);
     onOpenChange(false);
     qc.invalidateQueries({ queryKey: ["group", groupId] });
+    qc.invalidateQueries({ queryKey: ["group-jobs-dup", groupId] });
   }
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
   const importJob = useServerFn(importJobFromLink);
@@ -535,7 +551,21 @@ function PostJobDialog({ open, onOpenChange, groupId, userId }: { open: boolean;
           </div>
           <div className="space-y-1"><Label>Job description</Label><Textarea required rows={8} placeholder="Filled in from the link, or paste the full JD…" value={f.description} onChange={set("description")} /></div>
           <div className="space-y-1"><Label>Notes (optional)</Label><Input value={f.notes} onChange={set("notes")} /></div>
-          <Button className="w-full" disabled={busy}>Post & notify group</Button>
+          {dups.length > 0 && (
+            <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm">
+              <p className="font-semibold">Heads up — this job is already on the board:</p>
+              <ul className="list-disc pl-5 text-muted-foreground">
+                {dups.map((d) => (
+                  <li key={d.id}>{d.role} · {d.company}{d.posted_by === userId ? " (posted by you)" : ""} — {new Date(d.created_at).toLocaleDateString()}</li>
+                ))}
+              </ul>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={allowDup} onChange={(e) => setAllowDup(e.target.checked)} />
+                It's a different opening — post anyway
+              </label>
+            </div>
+          )}
+          <Button className="w-full" disabled={busy || (dups.length > 0 && !allowDup)}>Post & notify group</Button>
         </form>
       </DialogContent>
     </Dialog>
