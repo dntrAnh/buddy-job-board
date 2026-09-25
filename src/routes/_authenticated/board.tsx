@@ -124,13 +124,24 @@ function Board() {
     toast.success("You joined the group!");
   }
 
-  async function newGroup() {
-    const name = prompt("Group name?");
-    if (!name?.trim()) return;
-    const { data, error } = await supabase.from("groups").insert({ name: name.trim(), created_by: user.id }).select("id").single();
+  function suggestGroupName() {
+    const names = ["Dream Job Crew", "The Offer Hunters", "Apply Together", "Hired Squad", "The Job Hunt Club", "Next Chapter Crew"];
+    const pick = names[Math.floor(Math.random() * names.length)];
+    setNewGroupName(pick === newGroupName ? names[(names.indexOf(pick) + 1) % names.length] : pick);
+  }
+
+  async function createGroup() {
+    const name = newGroupName.trim();
+    if (!name) return;
+    setCreatingGroup(true);
+    const { data, error } = await supabase.from("groups").insert({ name, created_by: user.id }).select("id").single();
+    setCreatingGroup(false);
     if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["groups"] });
     setGroupId(data.id);
+    setNewGroupOpen(false);
+    setNewGroupName("");
+    toast.success(`"${name}" is live — invite your crew!`);
   }
 
   return (
