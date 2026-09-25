@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
 
 async function loadGroup(groupId: string) {
   const [g, m, inv, ev] = await Promise.all([
-    supabase.from("groups").select("id, name, created_by").eq("id", groupId).single(),
+    supabase.from("groups").select("id, name, created_by, invite_token").eq("id", groupId).single(),
     supabase.from("group_members").select("user_id, joined_at").eq("group_id", groupId),
     supabase.from("invites").select("id, email, created_at").eq("group_id", groupId).eq("accepted", false),
     supabase.from("email_events").select("*").eq("group_id", groupId).order("created_at", { ascending: false }).limit(50),
