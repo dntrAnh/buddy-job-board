@@ -172,7 +172,7 @@ function ResumePage() {
                     </p>
                   )}
                   <p>
-                    {pendingDelete?.score_before !== null && pendingDelete?.score_after !== null && (
+                    {pendingDelete != null && pendingDelete.score_before !== null && pendingDelete.score_after !== null && (
                       <>This was the {pendingDelete.score_before}% → {pendingDelete.score_after}% version. </>
                     )}
                     Your primary resume stays untouched, and you can save a new version for this job anytime.

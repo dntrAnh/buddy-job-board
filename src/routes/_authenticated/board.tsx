@@ -126,8 +126,8 @@ function Board() {
 
   function suggestGroupName() {
     const names = ["Dream Job Crew", "The Offer Hunters", "Apply Together", "Hired Squad", "The Job Hunt Club", "Next Chapter Crew"];
-    const pick = names[Math.floor(Math.random() * names.length)];
-    setNewGroupName(pick === newGroupName ? names[(names.indexOf(pick) + 1) % names.length] : pick);
+    const pick = names.find((n) => n !== newGroupName.trim()) ?? names[0]!;
+    setNewGroupName(pick);
   }
 
   async function createGroup() {
