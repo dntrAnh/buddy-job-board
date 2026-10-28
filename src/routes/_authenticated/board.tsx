@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ensureProfile, fetchGroupData, fetchGroups, fetchPendingInvites, type Job, type Profile, type SavedResume, type Score } from "@/lib/data";
+import { ensureProfile, fetchGroupData, fetchGroups, fetchPendingInvites, STAGES, type Application, type Job, type Profile, type SavedResume, type Score } from "@/lib/data";
 import { scoreJob } from "@/lib/scoring.functions";
 import { saveResumeVersion } from "@/lib/resumes.functions";
 import { notifyApplied, notifyInvite, notifyNewJob } from "@/lib/notify.functions";
@@ -387,6 +387,9 @@ function GroupView({ groupId, profile, userId }: { groupId: string; profile: Pro
           await qc.invalidateQueries({ queryKey: ["group", groupId] });
           if (openJob) await runScore(openJob.id);
         }}
+        tracker={openJob ? (
+          <ApplicationTracker key={openJob.id} jobId={openJob.id} apps={d.applications} names={names} userId={userId} onChanged={() => qc.invalidateQueries({ queryKey: ["group", groupId] })} />
+        ) : null}
       />
     </>
   );
@@ -447,7 +450,7 @@ function JobCard(props: {
   );
 }
 
-function JobDialog({ job, onClose, score, scoring, onRegrade, savedResume, improveOnOpen, onSaved }: { job: Job | null; onClose: () => void; score?: Score | undefined; scoring: boolean; onRegrade: () => void; savedResume?: SavedResume | undefined; improveOnOpen: boolean; onSaved: () => Promise<void> }) {
+function JobDialog({ job, onClose, score, scoring, onRegrade, savedResume, improveOnOpen, onSaved, tracker }: { job: Job | null; onClose: () => void; score?: Score | undefined; scoring: boolean; onRegrade: () => void; savedResume?: SavedResume | undefined; improveOnOpen: boolean; onSaved: () => Promise<void>; tracker?: React.ReactNode }) {
   return (
     <Dialog open={!!job} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
@@ -456,6 +459,7 @@ function JobDialog({ job, onClose, score, scoring, onRegrade, savedResume, impro
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">{job.role} · {job.company}</DialogTitle>
             </DialogHeader>
+            {tracker}
             <ScoreDetails score={score} scoring={scoring} onRegrade={onRegrade} />
             <BulletImprover key={`${job.id}-${improveOnOpen ? "score" : "view"}`} jobId={job.id} score={score} savedResume={savedResume} autoRun={improveOnOpen} onSaved={onSaved} />
             {job.notes && <p className="rounded-lg bg-muted p-3 text-sm">{job.notes}</p>}
@@ -464,6 +468,71 @@ function JobDialog({ job, onClose, score, scoring, onRegrade, savedResume, impro
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+const STAGE_TONE: Record<string, string> = {
+  applied: "bg-muted text-foreground",
+  screening: "bg-accent text-accent-foreground",
+  interviewing: "bg-primary text-primary-foreground",
+  offer: "bg-success text-success-foreground",
+  rejected: "bg-destructive/15 text-destructive",
+};
+
+function ApplicationTracker({ jobId, apps, names, userId, onChanged }: { jobId: string; apps: Application[]; names: Map<string, string>; userId: string; onChanged: () => Promise<void> }) {
+  const rows = apps.filter((a) => a.job_id === jobId && a.status === "applied").sort((a, b) => (a.user_id === userId ? -1 : b.user_id === userId ? 1 : 0));
+  const mine = rows.find((a) => a.user_id === userId);
+  const [notes, setNotes] = useState(mine?.interview_notes ?? "");
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { setNotes(mine?.interview_notes ?? ""); }, [mine?.interview_notes]);
+
+  async function update(patch: { stage?: string; interview_notes?: string }) {
+    setSaving(true);
+    const { error } = await supabase.from("applications").update({ ...patch, updated_at: new Date().toISOString() }).eq("job_id", jobId).eq("user_id", userId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    await onChanged();
+    if (patch.interview_notes !== undefined) toast.success("Notes saved");
+  }
+
+  return (
+    <section className="rounded-2xl border-2 border-foreground p-3 sm:p-4">
+      <h3 className="font-display text-lg">Application tracker</h3>
+      {rows.length === 0 ? (
+        <p className="mt-1 text-sm text-muted-foreground">No one has applied yet — be the first.</p>
+      ) : (
+        <ul className="mt-3 space-y-3">
+          {rows.map((a) => {
+            const label = STAGES.find((s) => s.value === a.stage)?.label ?? "Applied";
+            const isMe = a.user_id === userId;
+            return (
+              <li key={a.user_id} className="rounded-xl bg-muted/50 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-medium">{isMe ? "You" : names.get(a.user_id) ?? "Member"}</span>
+                  {isMe ? (
+                    <Select value={a.stage || "applied"} onValueChange={(v) => update({ stage: v })} disabled={saving}>
+                      <SelectTrigger className="h-8 w-40" aria-label="My status"><SelectValue /></SelectTrigger>
+                      <SelectContent>{STAGES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  ) : (
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STAGE_TONE[a.stage] ?? STAGE_TONE.applied}`}>{label}</span>
+                  )}
+                </div>
+                {isMe ? (
+                  <div className="mt-2 space-y-2">
+                    <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Interview notes — questions asked, who you met, next steps…" rows={3} maxLength={2000} />
+                    <Button size="sm" variant="outline" disabled={saving || notes === (a.interview_notes ?? "")} onClick={() => update({ interview_notes: notes })}>Save notes</Button>
+                  </div>
+                ) : a.interview_notes ? (
+                  <p className="mt-2 whitespace-pre-wrap text-sm">{a.interview_notes}</p>
+                ) : null}
+                <p className="mt-1 text-xs text-muted-foreground">Updated {new Date(a.updated_at).toLocaleDateString()}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 
