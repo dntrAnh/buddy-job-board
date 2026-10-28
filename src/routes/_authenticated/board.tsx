@@ -490,7 +490,7 @@ function ApplicationTracker({ jobId, apps, names, userId, onChanged }: { jobId: 
     setSaving(true);
     const { error } = await supabase.from("applications").update({ ...patch, updated_at: new Date().toISOString() }).eq("job_id", jobId).eq("user_id", userId);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await onChanged();
     if (patch.interview_notes !== undefined) toast.success("Notes saved");
   }
@@ -515,7 +515,7 @@ function ApplicationTracker({ jobId, apps, names, userId, onChanged }: { jobId: 
                       <SelectContent>{STAGES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
                     </Select>
                   ) : (
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STAGE_TONE[a.stage] ?? STAGE_TONE.applied}`}>{label}</span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STAGE_TONE[a.stage] ?? STAGE_TONE["applied"]}`}>{label}</span>
                   )}
                 </div>
                 {isMe ? (
