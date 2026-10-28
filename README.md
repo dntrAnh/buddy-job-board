@@ -54,7 +54,8 @@ Crew Connect is the board that ends that story. It is a private job board for on
 **Backend**
 - TanStack Start server functions (API and server logic in the same codebase)
 - Nitro (server runtime and build output)
-- Supabase: PostgreSQL database with SQL migrations, Supabase Auth, and @supabase/supabase-js
+- Supabase: PostgreSQL database with SQL migrations, and @supabase/supabase-js
+- Supabase Auth: email/password accounts plus "Continue with Google" (Google OAuth provider configured directly in Supabase, no third-party auth broker)
 
 **AI**
 - Vercel AI SDK (`ai`) with the OpenAI provider (@ai-sdk/openai)
