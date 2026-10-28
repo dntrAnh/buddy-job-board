@@ -23,7 +23,7 @@ function htmlToText(html: string) {
 
 export const importJobFromLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ url: z.string().url() }).parse(i))
+  .validator((i: unknown) => z.object({ url: z.string().url() }).parse(i))
   .handler(async ({ data }) => {
     const url = new URL(data.url);
     if (!/^https?:$/.test(url.protocol) || /^(localhost|127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(url.hostname)) {

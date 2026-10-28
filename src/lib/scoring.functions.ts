@@ -13,7 +13,7 @@ const ScoreSchema = z.object({
 
 export const scoreJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ jobId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ jobId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const [{ data: job, error: jErr }, { data: profile }, { data: savedResume }] = await Promise.all([

@@ -14,7 +14,7 @@ const DeleteResumeSchema = z.object({ id: z.string().uuid() });
 
 export const saveResumeVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => SaveResumeSchema.parse(input))
+  .validator((input: unknown) => SaveResumeSchema.parse(input))
   .handler(async ({ data, context }) => {
     const resume = data.resume.trim();
     if (!resume) return { error: "Resume text is empty" };
@@ -44,7 +44,7 @@ export const saveResumeVersion = createServerFn({ method: "POST" })
 
 export const updateResumeVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => UpdateResumeSchema.parse(input))
+  .validator((input: unknown) => UpdateResumeSchema.parse(input))
   .handler(async ({ data, context }) => {
     const resume = data.resume.trim();
     if (!resume) return { error: "Resume text is empty" };
@@ -61,7 +61,7 @@ export const updateResumeVersion = createServerFn({ method: "POST" })
 
 export const deleteResumeVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => DeleteResumeSchema.parse(input))
+  .validator((input: unknown) => DeleteResumeSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("saved_resumes")

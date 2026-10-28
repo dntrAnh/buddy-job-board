@@ -21,7 +21,7 @@ export type BulletResult = z.infer<typeof BulletSchema>;
 
 export const improveBullets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ jobId: z.string().uuid(), resume: z.string().max(20000).nullable() }).parse(i))
+  .validator((i: unknown) => z.object({ jobId: z.string().uuid(), resume: z.string().max(20000).nullable() }).parse(i))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const [{ data: job }, { data: profile }, { data: savedResume }, { data: currentScore }] = await Promise.all([

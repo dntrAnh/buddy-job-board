@@ -14,7 +14,7 @@ const Id = z.object({ id: z.string().uuid() });
 
 export const notifyNewJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => Id.parse(i))
+  .validator((i: unknown) => Id.parse(i))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { sendAndLog, logSkipped } = await import("@/lib/email-log.server");
@@ -44,7 +44,7 @@ export const notifyNewJob = createServerFn({ method: "POST" })
 
 export const notifyApplied = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => Id.parse(i))
+  .validator((i: unknown) => Id.parse(i))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { sendAndLog, logSkipped } = await import("@/lib/email-log.server");
@@ -77,7 +77,7 @@ export const notifyApplied = createServerFn({ method: "POST" })
 
 export const notifyInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => Id.parse(i))
+  .validator((i: unknown) => Id.parse(i))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: inv } = await supabase.from("invites").select("id, email, group_id, invited_by, accepted").eq("id", data.id).single();
@@ -99,7 +99,7 @@ export const notifyInvite = createServerFn({ method: "POST" })
 
 export const removeMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ groupId: z.string().uuid(), userId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ groupId: z.string().uuid(), userId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("group_members").delete().eq("group_id", data.groupId).eq("user_id", data.userId);
     if (error) return { error: error.message };
