@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,10 +14,10 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Sign in — Crew Board" },
       { property: "og:description", content: "Sign in to your private crew job board." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://buddy-job-board.lovable.app/auth" },
+      { property: "og:url", content: "https://buddy-job-board.vercel.app/auth" },
       { name: "twitter:card", content: "summary" },
     ],
-    links: [{ rel: "canonical", href: "https://buddy-job-board.lovable.app/auth" }],
+    links: [{ rel: "canonical", href: "https://buddy-job-board.vercel.app/auth" }],
   }),
   component: AuthPage,
 });
@@ -57,8 +56,11 @@ function AuthPage() {
   }
 
   async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
-    if (r.error) toast.error(r.error.message);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth` },
+    });
+    if (error) toast.error(error.message);
   }
 
   return (
