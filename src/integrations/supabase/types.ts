@@ -16,19 +16,25 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
+          interview_notes: string
           job_id: string
+          stage: string
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          interview_notes?: string
           job_id: string
+          stage?: string
           status: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          interview_notes?: string
           job_id?: string
+          stage?: string
           status?: string
           updated_at?: string
           user_id?: string
