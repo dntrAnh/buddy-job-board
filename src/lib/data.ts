@@ -19,7 +19,21 @@ export type Job = {
   notes: string | null;
   created_at: string;
 };
-export type Application = { job_id: string; user_id: string; status: "applied" | "skipped" };
+export type Application = {
+  job_id: string;
+  user_id: string;
+  status: "applied" | "skipped";
+  stage: string;
+  interview_notes: string;
+  updated_at: string;
+};
+export const STAGES = [
+  { value: "applied", label: "Applied" },
+  { value: "screening", label: "Screening" },
+  { value: "interviewing", label: "Interviewing" },
+  { value: "offer", label: "Offer" },
+  { value: "rejected", label: "Rejected" },
+] as const;
 export type Score = {
   job_id: string;
   user_id: string;
